@@ -16,7 +16,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can start editing the page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
@@ -28,6 +28,18 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Project Structure
+
+This project follows a best-practice folder structure:
+
+- `src/app`: Application source code (pages, layouts, etc.)
+- `src/components`: Reusable UI components
+- `src/lib`: Utility functions and libraries
+- `src/hooks`: Custom React hooks
+- `src/types`: TypeScript type definitions
+- `src/config`: Configuration files
+- `src/services`: API services
 
 ## Deploy on Vercel
 
