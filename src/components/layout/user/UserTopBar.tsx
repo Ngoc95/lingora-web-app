@@ -19,6 +19,8 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -59,8 +61,18 @@ interface UserTopBarProps {
   title?: string;
 }
 
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+
 export function UserTopBar({ title }: UserTopBarProps) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/get-started");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--neutral-200)] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -106,9 +118,11 @@ export function UserTopBar({ title }: UserTopBarProps) {
           <NotificationBell count={3} />
           <UserMenu 
             user={{
-              name: "Người dùng",
-              email: "user@lingora.com",
+              name: user?.username || "Người dùng",
+              email: user?.email || "user@lingora.com",
+              avatar: user?.avatar
             }}
+            onLogout={handleLogout}
           />
           
           {/* Mobile Menu Button */}
@@ -123,7 +137,11 @@ export function UserTopBar({ title }: UserTopBarProps) {
                 <span className="sr-only">Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-64 p-0">
+            <SheetContent side="left" className="w-64 p-0">
+              <SheetTitle className="sr-only">Menu Navigation</SheetTitle>
+              <SheetDescription className="sr-only">
+                Menu điều hướng chính cho thiết bị di động
+              </SheetDescription>
               <div className="flex flex-col h-full">
                 <div className="p-4 border-b border-[var(--neutral-200)]">
                   <Logo />

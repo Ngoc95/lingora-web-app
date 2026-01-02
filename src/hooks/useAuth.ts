@@ -1,172 +1,105 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { authService } from "@/services/auth.service";
+import { setAuthToken, clearAuthToken } from "@/services/api";
+import type { User, LoginRequest, RegisterRequest } from "@/types/auth";
 
-interface IUser {
-  id: number;
-  username: string;
-  email: string;
-  roles: IRole[];
-  avatar?: string;
-  status: 'ACTIVE' | 'BANNED' | 'PENDING';
-  proficiency?: string;
-  createdAt?: string;
-}
-
-interface IRole {
-  id: number;
-  name: 'ADMIN' | 'LEARNER';
-}
-
-interface ILoginRequest {
-  usernameOrEmail: string;
-  password: string;
-}
-
-interface IRegisterRequest {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface UseAuthReturn {
-  user: IUser | null;
+interface AuthState {
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: Error | null;
-  login: (credentials: ILoginRequest) => Promise<void>;
-  register: (data: IRegisterRequest) => Promise<void>;
+  error: string | null;
+  login: (data: LoginRequest) => Promise<User>;
+  register: (data: RegisterRequest) => Promise<User>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  clearError: () => void;
 }
 
-export function useAuth(): UseAuthReturn {
-  const [user, setUser] = useState<IUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export const useAuth = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
 
-  // Check if user is authenticated on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          // TODO: Call API to get user profile
-          // const response = await authApi.getProfile();
-          // setUser(response.data);
+      login: async (data: LoginRequest) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authService.login(data);
+          const { user, accessToken } = res.metaData;
           
-          // Placeholder: Mock user data
-          setUser({
-            id: 1,
-            username: "demo_user",
-            email: "demo@lingora.com",
-            roles: [{ id: 1, name: 'LEARNER' }],
-            status: 'ACTIVE',
-            proficiency: 'B1'
+          setAuthToken(accessToken);
+          set({ user, isAuthenticated: true, isLoading: false });
+          return user;
+        } catch (error: any) {
+          set({ 
+            error: error.message || "Đăng nhập thất bại", 
+            isLoading: false 
           });
+          throw error;
         }
-      } catch (err) {
-        setError(err as Error);
-        localStorage.removeItem("accessToken");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      },
 
-    checkAuth();
-  }, []);
+      register: async (data: RegisterRequest) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authService.register(data);
+          const { user, accessToken } = res.metaData;
+          
+          setAuthToken(accessToken);
+          set({ user, isAuthenticated: true, isLoading: false });
+          return user;
+        } catch (error: any) {
+          set({ 
+            error: error.message || "Đăng ký thất bại", 
+            isLoading: false 
+          });
+          throw error;
+        }
+      },
 
-  const login = useCallback(async (credentials: ILoginRequest) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // TODO: Call login API
-      // const response = await authApi.login(credentials);
-      // localStorage.setItem("accessToken", response.data.accessToken);
-      // setUser(response.data.user);
-      
-      // Placeholder: Mock login
-      localStorage.setItem("accessToken", "mock_token");
-      setUser({
-        id: 1,
-        username: credentials.usernameOrEmail,
-        email: "demo@lingora.com",
-        roles: [{ id: 1, name: 'LEARNER' }],
-        status: 'ACTIVE',
-        proficiency: 'B1'
-      });
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    } finally {
-      setIsLoading(false);
+      logout: async () => {
+        set({ isLoading: true });
+        try {
+          await authService.logout();
+        } catch (error) {
+          console.error("Logout error", error);
+        } finally {
+          clearAuthToken();
+          set({ user: null, isAuthenticated: false, isLoading: false });
+          // Optional: redirect to login handled by component or middleware
+        }
+      },
+
+      refreshProfile: async () => {
+        try {
+          const res = await authService.getMe();
+          set({ user: res.metaData, isAuthenticated: true }); // ApiResponse<User> -> metaData IS User
+        } catch {
+          // If checking profile fails, usually means token invalid or user deleted
+          // Must call logout to clear server-side cookies (refreshToken)
+          try {
+            await authService.logout();
+          } catch (e) {
+            console.error("Force logout failed", e);
+          }
+          clearAuthToken();
+          set({ user: null, isAuthenticated: false });
+          if (typeof window !== "undefined") {
+            window.location.href = "/get-started?session_expired=true";
+          }
+        }
+      },
+
+      clearError: () => set({ error: null }),
+    }),
+    {
+      name: "auth-storage",
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     }
-  }, []);
-
-  const register = useCallback(async (data: IRegisterRequest) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // TODO: Call register API
-      // const response = await authApi.register(data);
-      // localStorage.setItem("accessToken", response.data.accessToken);
-      // setUser(response.data.user);
-      
-      // Placeholder: Mock register
-      localStorage.setItem("accessToken", "mock_token");
-      setUser({
-        id: 1,
-        username: data.username,
-        email: data.email,
-        roles: [{ id: 1, name: 'LEARNER' }],
-        status: 'PENDING',
-      });
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // TODO: Call logout API
-      // await authApi.logout();
-      
-      localStorage.removeItem("accessToken");
-      setUser(null);
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const refreshUser = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // TODO: Call API to refresh user profile
-      // const response = await authApi.getProfile();
-      // setUser(response.data);
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    error,
-    login,
-    register,
-    logout,
-    refreshUser,
-  };
-}
+  )
+);

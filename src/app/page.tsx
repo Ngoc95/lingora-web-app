@@ -72,14 +72,8 @@ export default function LandingPage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Logo />
           <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-[var(--neutral-600)] hover:text-[var(--primary-500)] transition-colors"
-            >
-              Đăng nhập
-            </Link>
             <Button asChild className="bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] hover:from-[var(--primary-600)] hover:to-[var(--primary-700)]">
-              <Link href="/register">Đăng ký miễn phí</Link>
+              <Link href="/get-started">Đăng ký miễn phí</Link>
             </Button>
           </div>
         </div>
@@ -101,7 +95,7 @@ export default function LandingPage() {
 
           <h1 className="text-4xl font-bold tracking-tight text-[var(--neutral-900)] md:text-6xl lg:text-7xl">
             Học tiếng Anh
-            <span className="block bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] bg-clip-text text-transparent">
+            <span className="pb-5 block bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] bg-clip-text text-transparent">
               thông minh hơn
             </span>
           </h1>
@@ -117,13 +111,10 @@ export default function LandingPage() {
               size="lg"
               className="w-full sm:w-auto bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] hover:from-[var(--primary-600)] hover:to-[var(--primary-700)] text-lg px-8"
             >
-              <Link href="/register">
+              <Link href="/get-started">
                 Bắt đầu học miễn phí
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-lg px-8">
-              <Link href="/login">Đã có tài khoản?</Link>
             </Button>
           </div>
 
@@ -214,7 +205,7 @@ export default function LandingPage() {
                 asChild
                 className="mt-8 bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] hover:from-[var(--primary-600)] hover:to-[var(--primary-700)]"
               >
-                <Link href="/register">
+                <Link href="/get-started">
                   Trải nghiệm ngay
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -297,7 +288,7 @@ export default function LandingPage() {
                 size="lg"
                 className="w-full sm:w-auto bg-white text-[var(--primary-500)] hover:bg-white/90 text-lg px-8"
               >
-                <Link href="/register">
+                <Link href="/get-started">
                   Đăng ký miễn phí
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

@@ -12,7 +12,18 @@ interface AdminTopBarProps {
   mobileMenuOpen?: boolean;
 }
 
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+
 export function AdminTopBar({ onMenuClick, sidebarCollapsed, mobileMenuOpen }: AdminTopBarProps) {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/get-started");
+  };
+
   return (
     <header
       className={cn(
@@ -51,9 +62,11 @@ export function AdminTopBar({ onMenuClick, sidebarCollapsed, mobileMenuOpen }: A
           <NotificationBell count={5} />
           <UserMenu
             user={{
-              name: "Admin",
-              email: "admin@lingora.com",
+              name: user?.username || "Admin",
+              email: user?.email || "admin@lingora.com",
+              avatar: user?.avatar
             }}
+            onLogout={handleLogout}
           />
         </div>
       </div>

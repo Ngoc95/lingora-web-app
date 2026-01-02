@@ -1,5 +1,6 @@
 import { UserTopBar } from "@/components/layout/user/UserTopBar";
 import { ChatbotFAB } from "@/components/layout/user/ChatbotFAB";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function UserLayout({
   children,
@@ -9,6 +10,7 @@ export default function UserLayout({
   return (
     <div className="min-h-screen bg-[var(--neutral-50)]">
       {/* Top Bar with Navigation */}
+      <AuthGuard />
       <UserTopBar />
 
       {/* Main Content */}
