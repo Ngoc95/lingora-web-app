@@ -11,7 +11,7 @@ import { authService } from "@/services/auth.service";
 export function LoginForm() {
   const router = useRouter();
   const { login } = useAuth();
-  
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -35,15 +35,15 @@ export function LoginForm() {
         router.push("/otp?email=" + encodeURIComponent(user.email));
         return;
       }
-      
+
       const isAdmin = user.roles.some((role: any) => role.name === "ADMIN");
-      
+
       if (isAdmin) {
-          toast.success("Đăng nhập thành công! Chào mừng trở lại, Admin.");
-          router.push("/admin/dashboard");
+        toast.success("Đăng nhập thành công! Chào mừng trở lại, Admin.");
+        router.push("/admin/dashboard");
       } else {
-          toast.success("Đăng nhập thành công! Chào mừng bạn.");
-          router.push("/vocabulary");
+        toast.success("Đăng nhập thành công! Chào mừng bạn.");
+        router.push("/vocabulary");
       }
     } catch (err: any) {
       setError(err?.message || "Đăng nhập thất bại. Vui lòng thử lại.");
@@ -64,8 +64,8 @@ export function LoginForm() {
       <div className="space-y-4">
         {/* Identifier */}
         <div className="space-y-2">
-          <label 
-            htmlFor="login-identifier" 
+          <label
+            htmlFor="login-identifier"
             className="text-sm font-medium text-[var(--neutral-900)]"
           >
             Tên đăng nhập hoặc Email
@@ -83,10 +83,10 @@ export function LoginForm() {
         </div>
 
         {/* Password */}
-        <div className="space-y-2 relative">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label 
-              htmlFor="login-password" 
+            <label
+              htmlFor="login-password"
               className="text-sm font-medium text-[var(--neutral-900)]"
             >
               Mật khẩu
@@ -110,19 +110,21 @@ export function LoginForm() {
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--neutral-400)] hover:text-[var(--neutral-600)] transition-colors"
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
                 <Eye className="w-5 h-5" />
+              ) : (
+                <EyeOff className="w-5 h-5" />
               )}
             </button>
           </div>
-          <Link
-            href="/forgot-password"
-            className="absolute top-0 right-0 text-sm font-medium text-[var(--primary-500)] hover:text-[var(--primary-600)]"
-            tabIndex={2}
-          >
-            Quên mật khẩu?
-          </Link>
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-sm font-medium text-[var(--primary-500)] hover:text-[var(--primary-600)] hover:underline"
+              tabIndex={2}
+            >
+              Quên mật khẩu?
+            </Link>
+          </div>
         </div>
       </div>
 
