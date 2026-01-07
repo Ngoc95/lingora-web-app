@@ -10,6 +10,9 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle,
+  FilePlus,
+  Share2,
+  Search,
 } from "lucide-react";
 
 // TODO: BE cần API GET /api/statistics để lấy số liệu thực
@@ -41,7 +44,26 @@ const FEATURES = [
     title: "Cộng đồng học tập",
     description: "Diễn đàn trao đổi, chia sẻ kinh nghiệm và tài liệu học tiếng Anh cùng cộng đồng.",
   },
+  {
+    icon: FilePlus,
+    title: "Tạo học liệu",
+    description: "Tự tạo flashcard, bài kiểm tra và lộ trình học tập cá nhân hóa theo nhu cầu của bạn.",
+  },
+  {
+    icon: Share2,
+    title: "Trao đổi học liệu",
+    description: "Chia sẻ và sử dụng kho tài liệu phong phú từ cộng đồng người học trên toàn thế giới.",
+  },
+  {
+    icon: Search,
+    title: "Tra cứu từ điển",
+    description: "Từ điển tích hợp thông minh, tra cứu nhanh chóng nghĩa, phát âm và ví dụ ngữ cảnh.",
+  },
 ];
+
+// ... (TESTIMONIALS is below)
+
+
 
 const TESTIMONIALS = [
   {
@@ -72,14 +94,8 @@ export default function LandingPage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Logo />
           <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-[var(--neutral-600)] hover:text-[var(--primary-500)] transition-colors"
-            >
-              Đăng nhập
-            </Link>
             <Button asChild className="bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] hover:from-[var(--primary-600)] hover:to-[var(--primary-700)]">
-              <Link href="/register">Đăng ký miễn phí</Link>
+              <Link href="/get-started">Đăng ký miễn phí</Link>
             </Button>
           </div>
         </div>
@@ -101,7 +117,7 @@ export default function LandingPage() {
 
           <h1 className="text-4xl font-bold tracking-tight text-[var(--neutral-900)] md:text-6xl lg:text-7xl">
             Học tiếng Anh
-            <span className="block bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] bg-clip-text text-transparent">
+            <span className="pb-5 block bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] bg-clip-text text-transparent">
               thông minh hơn
             </span>
           </h1>
@@ -117,13 +133,10 @@ export default function LandingPage() {
               size="lg"
               className="w-full sm:w-auto bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] hover:from-[var(--primary-600)] hover:to-[var(--primary-700)] text-lg px-8"
             >
-              <Link href="/register">
+              <Link href="/get-started">
                 Bắt đầu học miễn phí
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-lg px-8">
-              <Link href="/login">Đã có tài khoản?</Link>
             </Button>
           </div>
 
@@ -158,26 +171,49 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={feature.title}
-                  className="group rounded-2xl border border-[var(--neutral-200)] bg-white p-6 shadow-sm transition-all hover:border-[var(--primary-500)] hover:shadow-lg"
-                >
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary-500)] to-[var(--primary-600)] text-white shadow-lg shadow-[var(--primary-500)]/25">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="mb-2 font-semibold text-[var(--neutral-900)] group-hover:text-[var(--primary-500)]">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-[var(--neutral-600)]">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
+          <div className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
+            <ul className="flex items-center justify-center md:justify-start [&_li]:mx-4 animate-infinite-scroll">
+              {FEATURES.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <li
+                    key={`feature-1-${index}`}
+                    className="w-[350px] flex-shrink-0 group rounded-2xl border border-[var(--neutral-200)] bg-white p-6 shadow-sm transition-all hover:border-[var(--primary-500)] hover:shadow-lg"
+                  >
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary-500)] to-[var(--primary-600)] text-white shadow-lg shadow-[var(--primary-500)]/25">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="mb-2 font-semibold text-[var(--neutral-900)] group-hover:text-[var(--primary-500)]">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-[var(--neutral-600)]">
+                      {feature.description}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+            <ul className="flex items-center justify-center md:justify-start [&_li]:mx-4 animate-infinite-scroll" aria-hidden="true">
+              {FEATURES.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <li
+                    key={`feature-2-${index}`}
+                    className="w-[350px] flex-shrink-0 group rounded-2xl border border-[var(--neutral-200)] bg-white p-6 shadow-sm transition-all hover:border-[var(--primary-500)] hover:shadow-lg"
+                  >
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary-500)] to-[var(--primary-600)] text-white shadow-lg shadow-[var(--primary-500)]/25">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="mb-2 font-semibold text-[var(--neutral-900)] group-hover:text-[var(--primary-500)]">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-[var(--neutral-600)]">
+                      {feature.description}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
       </section>
@@ -214,7 +250,7 @@ export default function LandingPage() {
                 asChild
                 className="mt-8 bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] hover:from-[var(--primary-600)] hover:to-[var(--primary-700)]"
               >
-                <Link href="/register">
+                <Link href="/get-started">
                   Trải nghiệm ngay
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -297,7 +333,7 @@ export default function LandingPage() {
                 size="lg"
                 className="w-full sm:w-auto bg-white text-[var(--primary-500)] hover:bg-white/90 text-lg px-8"
               >
-                <Link href="/register">
+                <Link href="/get-started">
                   Đăng ký miễn phí
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

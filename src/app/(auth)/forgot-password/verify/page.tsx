@@ -7,13 +7,11 @@ import { toast } from "sonner";
 import { CenteredCardLayout } from "@/components/auth/CenteredCardLayout";
 import { OTPInput } from "@/components/auth/OTPInput";
 import { authService } from "@/services/auth.service";
-import { useAuth } from "@/hooks/useAuth";
 
-function OTPForm() {
+function VerifyResetCodeForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
-  const { refreshProfile } = useAuth();
 
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,10 +39,10 @@ function OTPForm() {
     setIsLoading(true);
 
     try {
-      await authService.verifyEmail({ code: otp });
-      await refreshProfile();
-      toast.success("Xác thực email thành công! Bắt đầu học ngay.");
-      router.push("/adaptive-test");
+      const res = await authService.verifyResetCode({ email, code: otp });
+      const resetToken = res.metaData.resetToken;
+      toast.success("Xác thực mã thành công! Vui lòng đặt mật khẩu mới.");
+      router.push(`/forgot-password/reset?token=${resetToken}`);
     } catch (err: any) {
       setError(err?.message || "Mã xác thực không hợp lệ. Vui lòng thử lại.");
     } finally {
@@ -57,11 +55,11 @@ function OTPForm() {
     setError(null);
 
     try {
-      await authService.requestEmailVerification();
+      await authService.forgotPassword({ email });
       setCanResend(false);
       setCountdown(60);
       setOtp("");
-      toast.success("Đã gửi mã xác thực mới vào email của bạn.");
+      toast.success("Mã xác thực mới đã được gửi tới email của bạn.");
     } catch (err: any) {
       setError(err?.message || "Gửi lại mã thất bại. Vui lòng thử lại sau.");
     }
@@ -69,7 +67,6 @@ function OTPForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Email context */}
       <div className="text-center bg-[var(--neutral-50)] p-4 rounded-xl border border-[var(--neutral-200)]">
         <p className="text-sm text-[var(--neutral-600)] mb-1">
           Mã xác thực đã được gửi tới
@@ -117,12 +114,13 @@ function OTPForm() {
   );
 }
 
-export default function OTPPage() {
+export default function VerifyResetCodePage() {
   return (
     <CenteredCardLayout
-      title="Xác thực Email"
-      subtitle="Vui lòng nhập mã 6 số chúng tôi vừa gửi cho bạn"
-      showBackLink={false}
+      title="Nhập mã xác thực"
+      subtitle="Mã dùng một lần để đặt lại mật khẩu của bạn"
+      backLinkHref="/forgot-password"
+      backLinkText="Quay lại"
     >
       <Suspense
         fallback={
@@ -131,7 +129,7 @@ export default function OTPPage() {
           </div>
         }
       >
-        <OTPForm />
+        <VerifyResetCodeForm />
       </Suspense>
     </CenteredCardLayout>
   );
