@@ -94,7 +94,7 @@ export async function apiClient<T>(
 
   // Make request
   const headers = {
-    "Content-Type": "application/json",
+    ...(!(fetchOptions.body instanceof FormData) && { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...fetchOptions.headers,
   } as HeadersInit;
@@ -111,7 +111,7 @@ export async function apiClient<T>(
       isRefreshing = true;
       const newToken = await refreshToken();
       isRefreshing = false;
-      
+
       if (newToken) {
         onRefreshed(newToken);
         // Retry original request
@@ -121,11 +121,11 @@ export async function apiClient<T>(
         clearAuthToken();
         // Force clear cookies by calling logout endpoint (fire and forget)
         try {
-           await fetch(`${API_URL}/auth/logout`, { method: "POST", credentials: "include" });
+          await fetch(`${API_URL}/auth/logout`, { method: "POST", credentials: "include" });
         } catch (e) { console.error("Auto-logout failed", e); }
 
         if (typeof window !== "undefined" && !window.location.pathname.includes("/get-started")) {
-             window.location.href = "/get-started?session_expired=true";
+          window.location.href = "/get-started?session_expired=true";
         }
         throw new ApiError(401, "Session expired");
       }
@@ -170,10 +170,11 @@ export const api = {
   get: <T>(endpoint: string, params?: Record<string, string | number | boolean | null | undefined> | object) =>
     apiClient<T>(endpoint, { method: "GET", params: params as Record<string, string | number | boolean | null | undefined> }),
 
-  post: <T>(endpoint: string, body?: unknown) =>
+  post: <T>(endpoint: string, body?: unknown, options: Omit<FetchOptions, "method" | "body"> = {}) =>
     apiClient<T>(endpoint, {
       method: "POST",
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
+      ...options,
     }),
 
   patch: <T>(endpoint: string, body?: unknown) =>
