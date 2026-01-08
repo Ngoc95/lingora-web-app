@@ -3,6 +3,8 @@
 // Based on docs/Vocabulary_Learn_Module.md v2.0
 // ============================================================
 
+import type { ApiResponse, PaginationParams, PaginationMeta } from "./api";
+
 // === Enums ===
 
 export enum GameType {
@@ -175,11 +177,6 @@ export interface TopicDetailUiState {
 
 // === API Response Types ===
 
-export interface ApiResponse<T> {
-  message: string;
-  statusCode: number;
-  metaData: T;
-}
 
 export interface ProgressSummaryMetaData {
   totalLearnedWord: number | null;
@@ -189,14 +186,11 @@ export interface ProgressSummaryMetaData {
   }> | null;
 }
 
-export interface CategoryProgressListMetaData {
-  currentPage: number;
-  totalPages: number;
-  total: number;
+export interface CategoryProgressListMetaData extends PaginationMeta {
   categories: CategoryProgress[];
 }
 
-export interface CategoryTopicProgressMetaData {
+export interface CategoryTopicProgressMetaData extends PaginationMeta {
   categoryId: number;
   name: string;
   description: string;
@@ -204,19 +198,15 @@ export interface CategoryTopicProgressMetaData {
   completedTopics: number;
   progressPercent: number;
   completed: boolean;
-  currentPage: number;
-  totalPages: number;
   topics: TopicProgress[];
 }
 
-export interface TopicWordProgressMetaData {
+export interface TopicWordProgressMetaData extends PaginationMeta {
   topicId: number;
   totalWordsAll: number;
   learnedCountAll: number;
   completed: boolean;
   progressPercent: number;
-  currentPage: number;
-  totalPages: number;
   totalWordsFiltered: number;
   words: WordWithProgress[];
 }
@@ -256,12 +246,6 @@ export interface UpdateWordProgressMetaData {
 }
 
 // === API Request Types ===
-
-export interface PaginationParams {
-  limit?: number;
-  page?: number;
-  search?: string;
-}
 
 export interface CategoryTopicsParams extends PaginationParams {
   sort?: string;

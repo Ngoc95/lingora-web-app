@@ -4,8 +4,8 @@
 // ============================================================
 
 import { api } from "./api";
+import type { ApiResponse, PaginationParams } from "@/types/api";
 import type {
-  ApiResponse,
   ProgressSummaryMetaData,
   CategoryProgressListMetaData,
   CategoryTopicProgressMetaData,
@@ -14,7 +14,6 @@ import type {
   ReviewWordsMetaData,
   CreateWordProgressMetaData,
   UpdateWordProgressMetaData,
-  PaginationParams,
   CategoryTopicsParams,
   TopicWordsParams,
   CreateWordProgressRequest,

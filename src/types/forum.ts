@@ -1,4 +1,5 @@
 import { User } from "./auth";
+import type { ApiResponse, PaginationMeta, PaginationParams } from "./api";
 
 export enum PostTopic {
     GENERAL = "general",
@@ -32,32 +33,22 @@ export interface Post {
     updatedAt: string;
 }
 
-export interface GetAllPostsParams {
-    page?: number;
-    limit?: number;
+export interface GetAllPostsParams extends PaginationParams {
     sort?: string;
-    search?: string;
     ownerId?: number;
     topic?: PostTopic;
     tags?: string[];
     status?: string;
 }
 
-export interface GetAllPostsResponse {
-    message: string;
-    metaData: {
-        posts: Post[];
-        popularTags: string[];
-        currentPage: number;
-        totalPages: number;
-        total: number;
-    };
+export interface GetAllPostsMetaData extends PaginationMeta {
+    posts: Post[];
+    popularTags: string[];
 }
 
-export interface GetPostByIdResponse {
-    message: string;
-    metaData: Post;
-}
+export type GetAllPostsResponse = ApiResponse<GetAllPostsMetaData>;
+
+export type GetPostByIdResponse = ApiResponse<Post>;
 
 export interface CreatePostRequest {
     title: string;
@@ -76,18 +67,14 @@ export interface UpdatePostRequest {
     status?: PostStatus;
 }
 
-export interface PostResponse {
-    message: string;
-    metaData: Post;
+export type PostResponse = ApiResponse<Post>;
+
+export interface LikeMetaData {
+    targetId: number;
+    targetType: string;
 }
 
-export interface LikeResponse {
-    message: string;
-    metaData: {
-        targetId: number;
-        targetType: string;
-    };
-}
+export type LikeResponse = ApiResponse<LikeMetaData>;
 
 // Comment types
 export enum TargetType {
@@ -109,10 +96,7 @@ export interface Comment {
     updatedAt: string;
 }
 
-export interface GetCommentsResponse {
-    message: string;
-    metaData: Comment[];
-}
+export type GetCommentsResponse = ApiResponse<Comment[]>;
 
 export interface CreateCommentRequest {
     content: string;
@@ -123,7 +107,4 @@ export interface UpdateCommentRequest {
     content: string;
 }
 
-export interface CommentResponse {
-    message: string;
-    metaData: Comment;
-}
+export type CommentResponse = ApiResponse<Comment>;
