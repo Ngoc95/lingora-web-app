@@ -117,11 +117,7 @@ export function UserTopBar({ title }: UserTopBarProps) {
         <div className="flex items-center gap-2">
           <NotificationBell count={3} />
           <UserMenu 
-            user={{
-              name: user?.username || "Người dùng",
-              email: user?.email || "user@lingora.com",
-              avatar: user?.avatar
-            }}
+            user={user}
             onLogout={handleLogout}
           />
           

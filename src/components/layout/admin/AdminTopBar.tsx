@@ -61,11 +61,7 @@ export function AdminTopBar({ onMenuClick, sidebarCollapsed, mobileMenuOpen }: A
         <div className="flex items-center gap-2">
           <NotificationBell count={5} />
           <UserMenu
-            user={{
-              name: user?.username || "Admin",
-              email: user?.email || "admin@lingora.com",
-              avatar: user?.avatar
-            }}
+            user={user}
             onLogout={handleLogout}
           />
         </div>
