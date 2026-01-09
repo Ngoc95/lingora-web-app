@@ -1,9 +1,14 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Heart, MessageCircle, Edit, Trash2, BookOpen, HelpCircle, Loader2, ShoppingCart, CheckCircle, XCircle, MoreVertical, Flag } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Edit, Trash2, BookOpen, HelpCircle, Loader2, ShoppingCart, CheckCircle, XCircle, MoreVertical, Flag, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStudySetDetail, useStudySetMutation } from "@/hooks/useStudySet";
+import { studySetService } from "@/services/studySet.service";
+import { Comment, TargetType } from "@/types/forum";
+import { CommentItem } from "@/app/(user)/forum/_components/comments/CommentItem";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 
@@ -18,6 +23,27 @@ export default function StudySetDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'failed' | null>(null);
+
+  // Comment & Like State
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentReplies, setCommentReplies] = useState<Record<number, Comment[]>>({});
+  const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [replyToId, setReplyToId] = useState<number | null>(null);
+  const [replyToUsername, setReplyToUsername] = useState<string>("");
+  const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [localLikeCount, setLocalLikeCount] = useState<number | null>(null);
+  const [localIsLiked, setLocalIsLiked] = useState<boolean | null>(null);
+
+  // Sync local state with studySet data
+  useEffect(() => {
+    if (studySet) {
+      setLocalLikeCount(studySet.likeCount);
+      setLocalIsLiked(studySet.isAlreadyLike);
+    }
+  }, [studySet]);
 
   // Check for payment result from VNPay redirect
   useEffect(() => {
@@ -61,6 +87,139 @@ export default function StudySetDetailPage() {
     // TODO: Implement report feature
     alert("Đã gửi báo cáo vi phạm. Cảm ơn phản hồi của bạn!");
     setShowMenu(false);
+  };
+
+  // Load comments
+  useEffect(() => {
+    const loadComments = async () => {
+      if (!id) return;
+      setCommentsLoading(true);
+      try {
+        const response = await studySetService.getComments(id, "null", TargetType.STUDY_SET);
+        const allComments = response.metaData;
+        const topLevelComments = allComments.filter(c => !c.parentComment);
+        setComments(topLevelComments);
+
+        // Load replies
+        const repliesMap: Record<number, Comment[]> = {};
+        const allReplyIds = new Set<number>();
+
+        for (const parent of topLevelComments) {
+            try {
+                const repliesResponse = await studySetService.getComments(id, parent.id, TargetType.STUDY_SET);
+                const replies = repliesResponse.metaData;
+                repliesMap[parent.id] = replies;
+                replies.forEach(r => allReplyIds.add(r.id));
+            } catch (err) {
+                repliesMap[parent.id] = [];
+            }
+        }
+        
+        // Filter again to be sure
+        const finalTopLevel = topLevelComments.filter(c => !allReplyIds.has(c.id));
+        setComments(finalTopLevel);
+        setCommentReplies(repliesMap);
+      } catch (err) {
+        console.error("Failed to load comments", err);
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
+    loadComments();
+  }, [id]);
+
+  const handleLike = async () => {
+    if (localIsLiked === null || localLikeCount === null) return;
+    
+    const isLiked = localIsLiked;
+    const currentCount = localLikeCount;
+    // Optimistic update
+    setLocalIsLiked(!isLiked);
+    setLocalLikeCount(isLiked ? Math.max(0, currentCount - 1) : currentCount + 1);
+
+    try {
+      if (isLiked) {
+        await studySetService.unlikeStudySet(id);
+      } else {
+        await studySetService.likeStudySet(id);
+      }
+      revalidate(); 
+    } catch (err) {
+       // Revert
+       setLocalIsLiked(isLiked);
+       setLocalLikeCount(currentCount);
+       toast.error("Không thể thích học liệu");
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+
+    setSubmittingComment(true);
+    try {
+        const content = replyToUsername
+            ? `@${replyToUsername} ${commentText.trim()}`
+            : commentText.trim();
+
+        await studySetService.createComment(
+            id,
+            { content, parentId: replyToId },
+            TargetType.STUDY_SET
+        );
+
+        // Reload comments (simplified: strict reload)
+        const response = await studySetService.getComments(id, "null", TargetType.STUDY_SET);
+        const allComments = response.metaData;
+        const topLevelComments = allComments.filter(c => !c.parentComment);
+        
+        const repliesMap: Record<number, Comment[]> = {};
+        const allReplyIds = new Set<number>();
+        
+         for (const parent of topLevelComments) {
+            try {
+                const repliesResponse = await studySetService.getComments(id, parent.id, TargetType.STUDY_SET);
+                const replies = repliesResponse.metaData;
+                repliesMap[parent.id] = replies;
+                replies.forEach(r => allReplyIds.add(r.id));
+            } catch (err) {
+                repliesMap[parent.id] = [];
+            }
+        }
+        
+        const finalTopLevel = topLevelComments.filter(c => !allReplyIds.has(c.id));
+        setComments(finalTopLevel);
+        setCommentReplies(repliesMap);
+
+        if (replyToId) {
+            setExpandedComments(prev => new Set(prev).add(replyToId));
+        }
+
+        setCommentText("");
+        setReplyToId(null);
+        setReplyToUsername("");
+        setReplyToCommentId(null);
+        revalidate(); // Update comment count
+        toast.success("Đã thêm bình luận");
+    } catch (err) {
+        toast.error("Không thể thêm bình luận");
+    } finally {
+        setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+      if (!confirm("Bạn có chắc chắn muốn xóa bình luận này?")) return;
+      try {
+          await studySetService.deleteComment(commentId);
+          setComments(prev => prev.filter(c => c.id !== commentId));
+          // Note: if it was a reply, we'd need to update commentReplies too, but simplicity for now
+           // Ideally re-fetch comments
+          toast.success("Đã xóa bình luận");
+           revalidate();
+      } catch (err) {
+          toast.error("Không thể xóa bình luận");
+      }
   };
 
   if (isLoading) {
@@ -224,15 +383,21 @@ export default function StudySetDetailPage() {
                 <MessageCircle className="w-4 h-4" />
                 {studySet.commentCount}
               </span>
-              <span className="flex items-center gap-1">
+              <button 
+                onClick={handleLike}
+                className={cn(
+                  "flex items-center gap-1 hover:text-[var(--error)] transition-colors",
+                  localIsLiked && "text-[var(--error)]"
+                )}
+              >
                 <Heart
                   className={cn(
-                    "w-4 h-4",
-                    studySet.isAlreadyLike && "fill-[var(--error)] text-[var(--error)]"
+                    "w-4 h-4 transition-colors",
+                    localIsLiked && "fill-[var(--error)]"
                   )}
                 />
-                {studySet.likeCount}
-              </span>
+                {localLikeCount ?? studySet.likeCount}
+              </button>
             </div>
           </div>
         </div>
@@ -327,6 +492,150 @@ export default function StudySetDetailPage() {
             </div>
           </>
         )}
+        
+        {/* Comments Section */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-[var(--neutral-200)] space-y-4">
+             <h2 className="text-lg font-semibold text-[var(--neutral-900)]">
+                Bình luận ({comments.length})
+            </h2>
+
+             {/* Comment Form */}
+            <form onSubmit={handleSubmitComment} className="mb-6">
+                {replyToId && (
+                    <div className="mb-2 flex items-center gap-2 text-sm text-[var(--neutral-600)] bg-blue-50 px-3 py-2 rounded-lg">
+                        <span>Đang trả lời bình luận</span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setReplyToId(null);
+                                setReplyToUsername("");
+                                setReplyToCommentId(null);
+                            }}
+                            className="ml-auto text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                            Hủy
+                        </button>
+                    </div>
+                )}
+                <div className="flex gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[var(--primary-500)] to-[var(--primary-600)] rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                        {user?.username ? user.username[0].toUpperCase() : "?"}
+                    </div>
+                    <div className="flex-1">
+                        <textarea
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Viết bình luận..."
+                            className="w-full px-3 py-2 border border-[var(--neutral-200)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/50 resize-none"
+                            rows={3}
+                        />
+                        <div className="flex justify-end mt-2">
+                            <Button type="submit" disabled={!commentText.trim() || submittingComment}>
+                                {submittingComment ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <Send className="w-4 h-4 mr-2" />
+                                        Gửi
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+             {/* Comments List */}
+            {commentsLoading ? (
+                <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-[var(--primary-500)]" />
+                </div>
+            ) : comments.length > 0 ? (
+                <div className="space-y-4">
+                    {comments.map((comment) => (
+                        <CommentItem
+                            key={comment.id}
+                            comment={comment}
+                            replies={commentReplies[comment.id] || []}
+                            currentUserId={user?.id}
+                            onReply={(commentId, parentId, username) => {
+                                setReplyToId(parentId);
+                                setReplyToUsername(username);
+                                setReplyToCommentId(commentId);
+                                setExpandedComments(prev => new Set(prev).add(parentId));
+                            }}
+                            onDelete={handleDeleteComment}
+                            isExpanded={expandedComments.has(comment.id)}
+                            onToggleExpand={() => {
+                                setExpandedComments(prev => {
+                                    const newSet = new Set(prev);
+                                    if (newSet.has(comment.id)) {
+                                        newSet.delete(comment.id);
+                                    } else {
+                                        newSet.add(comment.id);
+                                    }
+                                    return newSet;
+                                });
+                            }}
+                            replyingTo={replyToCommentId ? { parentId: replyToId!, username: replyToUsername, commentId: replyToCommentId } : null}
+                            onSubmitReply={async (content) => {
+                                 setSubmittingComment(true);
+                                 try {
+                                     const finalContent = `@${replyToUsername} ${content}`;
+                                     await studySetService.createComment(
+                                         id,
+                                         { content: finalContent, parentId: replyToId },
+                                         TargetType.STUDY_SET
+                                     );
+                                    
+                                     // Refetch logic (duplicated for now due to complexity of extracting hook immediately)
+                                     const response = await studySetService.getComments(id, "null", TargetType.STUDY_SET);
+                                     const allComments = response.metaData;
+                                     const topLevelComments = allComments.filter(c => !c.parentComment);
+                                     
+                                     const repliesMap: Record<number, Comment[]> = {};
+                                     const allReplyIds = new Set<number>();
+                                     
+                                     for (const parent of topLevelComments) {
+                                         try {
+                                             const repliesResponse = await studySetService.getComments(id, parent.id, TargetType.STUDY_SET);
+                                             const replies = repliesResponse.metaData;
+                                             repliesMap[parent.id] = replies;
+                                             replies.forEach(r => allReplyIds.add(r.id));
+                                         } catch (err) {
+                                             repliesMap[parent.id] = [];
+                                         }
+                                     }
+                                     const finalTopLevel = topLevelComments.filter(c => !allReplyIds.has(c.id));
+                                     setComments(finalTopLevel);
+                                     setCommentReplies(repliesMap);
+                                     
+                                     setReplyToId(null);
+                                     setReplyToUsername("");
+                                     setReplyToCommentId(null);
+                                     revalidate();
+                                     toast.success("Đã thêm phản hồi");
+                                 } catch (err) {
+                                     toast.error("Không thể thêm phản hồi");
+                                 } finally {
+                                     setSubmittingComment(false);
+                                 }
+                            }}
+                            onCancelReply={() => {
+                                setReplyToId(null);
+                                setReplyToUsername("");
+                                setReplyToCommentId(null);
+                            }}
+                            submittingReply={submittingComment}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <p className="text-center text-[var(--neutral-600)] py-8">
+                    Chưa có bình luận nào. Hãy là người đầu tiên!
+                </p>
+            )}
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -360,3 +669,4 @@ export default function StudySetDetailPage() {
     </div>
   );
 }
+

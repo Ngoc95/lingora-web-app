@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,18 +25,24 @@ export default function StudySetsPage() {
     setPage,
   } = useStudySetList({ tab: activeTab });
 
-  const handleSearch = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
       setSearch(searchInput);
-    },
-    [searchInput, setSearch]
-  );
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, setSearch]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setSearchInput("");
     setSearch("");
+  };
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    setSearch(searchInput);
   };
 
   return (

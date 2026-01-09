@@ -78,6 +78,9 @@ export const useAuth = create<AuthState>()(
           clearAuthToken();
           set({ user: null, isAuthenticated: false, activeRole: null, isLoading: false });
           // Optional: redirect to login handled by component or middleware
+          if (typeof window !== "undefined") {
+            window.location.href = "/get-started?view=login";
+          }
         }
       },
 
@@ -102,7 +105,7 @@ export const useAuth = create<AuthState>()(
           clearAuthToken();
           set({ user: null, isAuthenticated: false, activeRole: null });
           if (typeof window !== "undefined") {
-            window.location.href = "/get-started?session_expired=true";
+            window.location.href = "/get-started?session_expired=true&view=login";
           }
         }
       },

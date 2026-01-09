@@ -94,10 +94,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
                     onClick={() => handleRoleSwitch(role.name)}
                     className="cursor-pointer"
                   >
-                    {activeRole === role.name && (
-                      <Check className="mr-2 h-4 w-4" />
-                    )}
-                    <span className={activeRole !== role.name ? "ml-6" : ""}>
+                    <span>
                       {role.name === UserRole.ADMIN ? "Quản trị viên" : "Người học"}
                     </span>
                   </DropdownMenuItem>

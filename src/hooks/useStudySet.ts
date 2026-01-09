@@ -6,16 +6,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import useSWR, { mutate } from 'swr';
-import {
-  getAllStudySets,
-  getOwnStudySets,
-  getStudySetById,
-  createStudySet,
-  updateStudySet,
-  deleteStudySet,
-  buyStudySet,
-  uploadImage,
-} from '@/services/studySet.service';
+import { studySetService } from '@/services/studySet.service';
 import type {
   StudySet,
   StudySetListResponse,
@@ -51,9 +42,11 @@ export function useStudySetList(options: UseStudySetListOptions = {}) {
 
   const fetcher = useCallback(async () => {
     if (tab === 'my') {
-      return getOwnStudySets(params);
+      const response = await studySetService.getOwn(params);
+      return response.metaData;
     }
-    return getAllStudySets(params);
+    const response = await studySetService.getAll(params);
+    return response.metaData;
   }, [tab, params]);
 
   const { data, error, isLoading, mutate: revalidate } = useSWR<StudySetListResponse>(
@@ -113,7 +106,11 @@ export function useStudySetList(options: UseStudySetListOptions = {}) {
 export function useStudySetDetail(id: number | null) {
   const { data, error, isLoading, mutate: revalidate } = useSWR<StudySet>(
     id ? ['studyset', id] : null,
-    () => (id ? getStudySetById(id) : Promise.reject('No ID')),
+    async () => {
+      if (!id) throw new Error('No ID');
+      const response = await studySetService.getById(id);
+      return response.metaData;
+    },
     {
       revalidateOnFocus: false,
     }
@@ -166,7 +163,7 @@ export function useStudySetMutation(): UseStudySetMutationResult {
       // Upload images in parallel
       const uploadPromises = Array.from(pendingImages.entries()).map(
         async ([index, file]) => {
-          const imageUrl = await uploadImage(file);
+          const imageUrl = await studySetService.uploadImage(file);
           return { index, imageUrl };
         }
       );
@@ -203,7 +200,7 @@ export function useStudySetMutation(): UseStudySetMutationResult {
           pendingImages
         );
 
-        const result = await createStudySet({
+        const response = await studySetService.create({
           ...data,
           flashcards: flashcardsWithImages,
         });
@@ -211,7 +208,7 @@ export function useStudySetMutation(): UseStudySetMutationResult {
         // Revalidate list
         mutate((key) => Array.isArray(key) && key[0] === 'studysets');
 
-        return result;
+        return response.metaData;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to create study set';
         setError(message);
@@ -239,7 +236,7 @@ export function useStudySetMutation(): UseStudySetMutationResult {
           pendingImages
         );
 
-        const result = await updateStudySet(id, {
+        const response = await studySetService.update(id, {
           ...data,
           flashcards: flashcardsWithImages,
         });
@@ -248,7 +245,7 @@ export function useStudySetMutation(): UseStudySetMutationResult {
         mutate(['studyset', id]);
         mutate((key) => Array.isArray(key) && key[0] === 'studysets');
 
-        return result;
+        return response.metaData;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to update study set';
         setError(message);
@@ -265,7 +262,7 @@ export function useStudySetMutation(): UseStudySetMutationResult {
     setError(null);
 
     try {
-      await deleteStudySet(id);
+      await studySetService.delete(id);
       mutate((key) => Array.isArray(key) && key[0] === 'studysets');
       return true;
     } catch (err) {
@@ -283,7 +280,8 @@ export function useStudySetMutation(): UseStudySetMutationResult {
       setError(null);
 
       try {
-        const result = await buyStudySet(id);
+        const response = await studySetService.buy(id);
+        const result = response.metaData;
         if (result.isFree) {
           // Revalidate to update isPurchased
           mutate(['studyset', id]);
