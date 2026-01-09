@@ -1,5 +1,5 @@
 import { UserTopBar } from "@/components/layout/user/UserTopBar";
-import { ChatbotFAB } from "@/components/layout/user/ChatbotFAB";
+import { ChatWidget } from "@/components/chatbot/ChatWidget";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 
 export default function UserLayout({
@@ -19,7 +19,7 @@ export default function UserLayout({
       </main>
 
       {/* Chatbot FAB */}
-      <ChatbotFAB />
+      <ChatWidget />
     </div>
   );
 }
