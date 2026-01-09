@@ -125,7 +125,7 @@ export async function apiClient<T>(
         } catch (e) { console.error("Auto-logout failed", e); }
 
         if (typeof window !== "undefined" && !window.location.pathname.includes("/get-started")) {
-          window.location.href = "/get-started?session_expired=true";
+             window.location.href = "/get-started?session_expired=true&view=login";
         }
         throw new ApiError(401, "Session expired");
       }

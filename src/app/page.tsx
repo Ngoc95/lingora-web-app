@@ -86,9 +86,12 @@ const TESTIMONIALS = [
   },
 ];
 
+import { LandingPageRedirect } from "@/components/auth/LandingPageRedirect";
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
+      <LandingPageRedirect />
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-[var(--neutral-200)] bg-white/95 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">

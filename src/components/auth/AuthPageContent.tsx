@@ -1,14 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export function AuthPageContent() {
-  const [isLogin, setIsLogin] = useState(true);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get("view");
+  const { isAuthenticated, user } = useAuth();
+  
+  // Default to Register if no param (user clicked "Get Started"), 
+  // or Login if view=login (user clicked "Login" or Logged out)
+  const [isLogin, setIsLogin] = useState(viewParam === "login");
+
+  useEffect(() => {
+    if (viewParam === "login") {
+      setIsLogin(true);
+    } else if (viewParam === "register") {
+      setIsLogin(false);
+    }
+  }, [viewParam]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const isAdmin = user.roles.some((role: any) => role.name === "ADMIN");
+      router.push(isAdmin ? "/admin/dashboard" : "/vocabulary");
+    }
+  }, [isAuthenticated, user, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--neutral-50)] to-[var(--neutral-100)] flex items-center justify-center p-4 overflow-hidden">
@@ -25,7 +49,7 @@ export function AuthPageContent() {
         <div
           className={cn(
             "absolute top-0 z-30 h-full w-1/2 bg-gradient-to-br from-[var(--primary-500)] to-[var(--primary-600)] transition-all duration-700 ease-in-out flex items-center justify-center",
-            isLogin ? "left-0 rounded-r-[100px]" : "left-1/2 rounded-l-[100px]"
+            isLogin ? "left-1/2 rounded-l-[100px]" : "left-0 rounded-r-[100px]"
           )}
         >
           {/* Decorative Elements */}
@@ -42,14 +66,14 @@ export function AuthPageContent() {
             <h1 className="text-4xl font-bold mb-4">Lingora</h1>
             <p className="text-lg text-white/90 mb-8 leading-relaxed">
               {isLogin
-                ? "Đã có tài khoản? Đăng nhập ngay để tiếp tục học!"
-                : "Chưa có tài khoản? Hãy đăng ký để bắt đầu hành trình học tiếng Anh!"}
+                ? "Chưa có tài khoản? Hãy đăng ký để bắt đầu hành trình học tiếng Anh!"
+                : "Đã có tài khoản? Đăng nhập ngay để tiếp tục học!"}
             </p>
             <button
               onClick={() => setIsLogin(!isLogin)}
               className="px-8 py-3 rounded-full border-2 border-white text-white font-semibold hover:bg-white hover:text-[var(--primary-500)] transition-all duration-300"
             >
-              {isLogin ? "Đăng nhập" : "Đăng ký"}
+              {isLogin ? "Đăng ký" : "Đăng nhập"}
             </button>
           </div>
         </div>
@@ -60,7 +84,7 @@ export function AuthPageContent() {
           <div
             className={cn(
               "w-1/2 h-full flex items-center justify-center p-8 transition-all duration-700",
-              isLogin ? "opacity-0 pointer-events-none" : "opacity-100"
+              isLogin ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
           >
             <div className="w-full max-w-sm">
@@ -80,7 +104,7 @@ export function AuthPageContent() {
           <div
             className={cn(
               "w-1/2 h-full flex items-center justify-center p-8 transition-all duration-700",
-              isLogin ? "opacity-100" : "opacity-0 pointer-events-none"
+              isLogin ? "opacity-0 pointer-events-none" : "opacity-100"
             )}
           >
             <div className="w-full max-w-sm">
