@@ -1,3 +1,5 @@
+import type { ApiResponse } from "./api";
+
 export enum UserRole {
   ADMIN = "ADMIN",
   LEARNER = "LEARNER",
@@ -31,13 +33,12 @@ export interface User {
   updatedAt?: string;
 }
 
-export interface AuthResponse {
-  message: string;
-  metaData: {
-    user: User;
-    accessToken: string;
-  };
+export interface AuthMetaData {
+  user: User;
+  accessToken: string;
 }
+
+export type AuthResponse = ApiResponse<AuthMetaData>;
 
 export interface LoginRequest {
   identifier: string; // username or email
@@ -67,9 +68,8 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface RefreshTokenResponse {
-  message: string;
-  metaData: {
-    accessToken: string;
-  };
+export interface RefreshTokenMetaData {
+  accessToken: string;
 }
+
+export type RefreshTokenResponse = ApiResponse<RefreshTokenMetaData>;

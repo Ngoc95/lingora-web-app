@@ -10,7 +10,7 @@ import type {
   ResetPasswordRequest,
   User,
 } from "@/types/auth";
-import { ApiResponse } from "@/types/vocabulary";
+import type { ApiResponse, MessageResponse } from "@/types/api";
 
 export const authService = {
   /**
@@ -31,7 +31,7 @@ export const authService = {
    * Logout
    * POST /auth/logout
    */
-  logout: () => api.post<{ message: string }>("/auth/logout"),
+  logout: () => api.post<MessageResponse>("/auth/logout"),
 
   /**
    * Refresh Token
@@ -51,7 +51,7 @@ export const authService = {
    * POST /auth/email-verification/request
    */
   requestEmailVerification: () =>
-    api.post<{ message: string }>("/auth/email-verification/request"),
+    api.post<MessageResponse>("/auth/email-verification/request"),
 
   /**
    * Verify Email OTP
@@ -65,14 +65,14 @@ export const authService = {
    * POST /auth/password-reset/request
    */
   forgotPassword: (data: ForgotPasswordRequest) =>
-    api.post<{ message: string }>("/auth/password-reset/request", data),
+    api.post<MessageResponse>("/auth/password-reset/request", data),
 
   /**
    * Verify Password Reset Code
    * POST /auth/password-reset/verify
    */
   verifyResetCode: (data: VerifyResetCodeRequest) =>
-    api.post<{ message: string; metaData: { resetToken: string } }>(
+    api.post<ApiResponse<{ resetToken: string }>>(
       `/auth/password-reset/verify?code=${data.code}`,
       { email: data.email }
     ),
@@ -83,7 +83,7 @@ export const authService = {
    * Note: This requires the temporary resetToken in Authorization header, handled by caller or interceptor
    */
   resetPassword: (data: ResetPasswordRequest, resetToken: string) =>
-    apiClient< { message: string } >("/auth/password-reset/confirm", {
+    apiClient<MessageResponse>("/auth/password-reset/confirm", {
       method: "POST",
       body: JSON.stringify(data),
       headers: {
