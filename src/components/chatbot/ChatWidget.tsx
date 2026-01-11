@@ -2,12 +2,21 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatWindow } from "./ChatWindow";
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Hide chatbot during exam practice sessions
+  const isExamMode = pathname?.includes("/practice/tests/") && pathname?.includes("/sections/");
+  
+  if (isExamMode) {
+    return null;
+  }
 
   return (
     <>
