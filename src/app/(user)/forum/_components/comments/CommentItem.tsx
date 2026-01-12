@@ -1,6 +1,7 @@
 import { Comment } from "@/types/forum";
 import { formatTimeAgo } from "@/utils/date";
 import { MoreVertical } from "lucide-react";
+import { useState } from "react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,6 +9,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InlineReplyForm } from "./InlineReplyForm";
+import { ReportDialog } from "@/components/shared/ReportDialog";
+import { TargetType } from "@/types/report";
 
 interface CommentItemProps {
     comment: Comment;
@@ -15,6 +18,7 @@ interface CommentItemProps {
     currentUserId?: number;
     onReply: (commentId: number, parentId: number, username: string) => void;
     onDelete: (commentId: number) => void;
+    onEdit?: (commentId: number, newContent: string) => Promise<void>;
     isExpanded?: boolean;
     onToggleExpand?: () => void;
     replyingTo?: { parentId: number; username: string; commentId: number } | null;
@@ -29,6 +33,7 @@ export function CommentItem({
     currentUserId,
     onReply,
     onDelete,
+    onEdit,
     isExpanded,
     onToggleExpand,
     replyingTo,
@@ -37,6 +42,11 @@ export function CommentItem({
     submittingReply,
 }: CommentItemProps) {
     const isOwner = comment.createdBy.id === currentUserId;
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
+    const [replyReportDialogs, setReplyReportDialogs] = useState<Record<number, boolean>>({});
+    const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+    const [editContent, setEditContent] = useState("");
+    const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
     // Format content to bold @mentions
     const formatContent = (content: string) => {
@@ -51,6 +61,31 @@ export function CommentItem({
             }
             return part;
         });
+    };
+
+    const handleStartEdit = (commentId: number, currentContent: string) => {
+        setEditingCommentId(commentId);
+        setEditContent(currentContent);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingCommentId(null);
+        setEditContent("");
+    };
+
+    const handleSaveEdit = async (commentId: number) => {
+        if (!editContent.trim() || !onEdit) return;
+
+        setIsSubmittingEdit(true);
+        try {
+            await onEdit(commentId, editContent.trim());
+            setEditingCommentId(null);
+            setEditContent("");
+        } catch (error) {
+            console.error("Failed to edit comment:", error);
+        } finally {
+            setIsSubmittingEdit(false);
+        }
     };
 
     return (
@@ -83,25 +118,66 @@ export function CommentItem({
                             <p className="font-medium text-sm text-neutral-900">
                                 {comment.createdBy.username}
                             </p>
-                            {isOwner && (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <button className="p-1 hover:bg-neutral-200 rounded">
-                                            <MoreVertical className="w-4 h-4 text-neutral-600" />
-                                        </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                            onClick={() => onDelete(comment.id)}
-                                            className="text-red-600"
-                                        >
-                                            Xóa
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="p-1 hover:bg-neutral-200 rounded">
+                                        <MoreVertical className="w-4 h-4 text-neutral-600" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    {isOwner ? (
+                                        <>
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    handleStartEdit(comment.id, comment.content);
+                                                }}
+                                            >
+                                                Chỉnh sửa
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => onDelete(comment.id)}
+                                                className="text-red-600"
+                                            >
+                                                Xóa
+                                            </DropdownMenuItem>
+                                        </>
+                                    ) : (
+                                        <DropdownMenuItem onClick={() => setReportDialogOpen(true)}>
+                                            Báo cáo vi phạm
                                         </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            )}
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
-                        <p className="text-sm text-neutral-700">{formatContent(comment.content)}</p>
+                        {editingCommentId === comment.id ? (
+                            <div className="mt-2">
+                                <textarea
+                                    value={editContent}
+                                    onChange={(e) => setEditContent(e.target.value)}
+                                    className="w-full p-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                    rows={3}
+                                    placeholder="Chỉnh sửa bình luận..."
+                                />
+                                <div className="flex gap-2 mt-2">
+                                    <button
+                                        onClick={() => handleSaveEdit(comment.id)}
+                                        disabled={!editContent.trim() || isSubmittingEdit}
+                                        className="px-3 py-1 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isSubmittingEdit ? "Đang lưu..." : "Lưu"}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        disabled={isSubmittingEdit}
+                                        className="px-3 py-1 bg-neutral-200 text-neutral-700 text-sm rounded-lg hover:bg-neutral-300 disabled:opacity-50"
+                                    >
+                                        Hủy
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-neutral-700">{formatContent(comment.content)}</p>
+                        )}
                     </div>
                     <div className="flex items-center gap-4 mt-1 text-xs text-neutral-500">
                         <span>{formatTimeAgo(comment.createdAt)}</span>
@@ -150,10 +226,74 @@ export function CommentItem({
                                     )}
                                     <div className="flex-1">
                                         <div className="bg-neutral-50 rounded-lg p-2">
-                                            <p className="font-medium text-xs text-neutral-900 mb-1">
-                                                {reply.createdBy.username}
-                                            </p>
-                                            <p className="text-xs text-neutral-700">{formatContent(reply.content)}</p>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <p className="font-medium text-xs text-neutral-900">
+                                                    {reply.createdBy.username}
+                                                </p>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button className="p-1 hover:bg-neutral-200 rounded">
+                                                            <MoreVertical className="w-3 h-3 text-neutral-600" />
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {reply.createdBy.id === currentUserId ? (
+                                                            <>
+                                                                <DropdownMenuItem
+                                                                    onClick={() => {
+                                                                        handleStartEdit(reply.id, reply.content);
+                                                                    }}
+                                                                >
+                                                                    Chỉnh sửa
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={() => onDelete(reply.id)}
+                                                                    className="text-red-600"
+                                                                >
+                                                                    Xóa
+                                                                </DropdownMenuItem>
+                                                            </>
+                                                        ) : (
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    setReplyReportDialogs(prev => ({ ...prev, [reply.id]: true }));
+                                                                }}
+                                                            >
+                                                                Báo cáo vi phạm
+                                                            </DropdownMenuItem>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                            {editingCommentId === reply.id ? (
+                                                <div className="mt-2">
+                                                    <textarea
+                                                        value={editContent}
+                                                        onChange={(e) => setEditContent(e.target.value)}
+                                                        className="w-full p-2 border border-neutral-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                                        rows={2}
+                                                        placeholder="Chỉnh sửa phản hồi..."
+                                                    />
+                                                    <div className="flex gap-2 mt-1">
+                                                        <button
+                                                            onClick={() => handleSaveEdit(reply.id)}
+                                                            disabled={!editContent.trim() || isSubmittingEdit}
+                                                            className="px-2 py-1 bg-primary text-white text-xs rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            {isSubmittingEdit ? "Đang lưu..." : "Lưu"}
+                                                        </button>
+                                                        <button
+                                                            onClick={handleCancelEdit}
+                                                            disabled={isSubmittingEdit}
+                                                            className="px-2 py-1 bg-neutral-200 text-neutral-700 text-xs rounded hover:bg-neutral-300 disabled:opacity-50"
+                                                        >
+                                                            Hủy
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-neutral-700">{formatContent(reply.content)}</p>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
                                             <span>{formatTimeAgo(reply.createdAt)}</span>
@@ -175,6 +315,16 @@ export function CommentItem({
                                                 submitting={submittingReply || false}
                                             />
                                         )}
+
+                                        {/* Report Dialog for this reply */}
+                                        <ReportDialog
+                                            targetType={TargetType.COMMENT}
+                                            targetId={reply.id}
+                                            open={replyReportDialogs[reply.id] || false}
+                                            onOpenChange={(open) => {
+                                                setReplyReportDialogs(prev => ({ ...prev, [reply.id]: open }));
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             ))}
@@ -182,6 +332,14 @@ export function CommentItem({
                     )}
                 </div>
             </div>
+
+            {/* Report Dialog */}
+            <ReportDialog
+                targetType={TargetType.COMMENT}
+                targetId={comment.id}
+                open={reportDialogOpen}
+                onOpenChange={setReportDialogOpen}
+            />
         </div>
     );
 }
