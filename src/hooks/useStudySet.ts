@@ -459,7 +459,7 @@ export function useQuizSession(quizzes: Quiz[]) {
 // Flashcard Session Hook (reusing existing useFlashcard pattern)
 // ============================================================
 
-export function useFlashcardSession(flashcards: { frontText: string; backText: string; example?: string; imageUrl?: string }[]) {
+export function useFlashcardSession(flashcards: { frontText: string; backText: string; example?: string; imageUrl?: string; audioUrl?: string }[]) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
