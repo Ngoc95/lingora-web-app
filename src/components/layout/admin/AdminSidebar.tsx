@@ -75,7 +75,7 @@ const navItems: NavItem[] = [
   },
   {
     href: "/admin/reports",
-    label: "Báo cáo",
+    label: "Quản lý vi phạm",
     icon: Flag,
   },
   {

@@ -20,6 +20,8 @@ import { CommentItem } from "../_components/comments/CommentItem";
 import { CreatePostDialog } from "../_components/CreatePostDialog";
 import { CreatePostRequest } from "@/types/forum";
 import { ImageGallery } from "../_components/ImageGallery";
+import { ReportDialog } from "@/components/shared/ReportDialog";
+import { TargetType as ReportTargetType } from "@/types/report";
 
 export default function PostDetailPage() {
     const router = useRouter();
@@ -40,6 +42,7 @@ export default function PostDetailPage() {
 
     const [submitting, setSubmitting] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
     // Get current user ID
     useEffect(() => {
@@ -236,6 +239,35 @@ export default function PostDetailPage() {
         }
     };
 
+    const handleEditComment = async (commentId: number, newContent: string) => {
+        try {
+            await forumService.updateComment(commentId, postId, { content: newContent }, TargetType.POST);
+
+            // Update local state
+            setComments(prevComments =>
+                prevComments.map(c =>
+                    c.id === commentId ? { ...c, content: newContent } : c
+                )
+            );
+
+            // Update replies if the edited comment is a reply
+            setCommentReplies(prevReplies => {
+                const newReplies = { ...prevReplies };
+                Object.keys(newReplies).forEach(parentId => {
+                    newReplies[parseInt(parentId)] = newReplies[parseInt(parentId)].map(reply =>
+                        reply.id === commentId ? { ...reply, content: newContent } : reply
+                    );
+                });
+                return newReplies;
+            });
+
+            toast.success("Đã cập nhật bình luận");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Không thể cập nhật bình luận");
+            throw err; // Re-throw to let CommentItem handle the error
+        }
+    };
+
     const handleUpdatePost = async (data: CreatePostRequest) => {
         if (!post) return;
         try {
@@ -348,7 +380,7 @@ export default function PostDetailPage() {
                             </div>
                         </div>
 
-                        {isOwner && (
+                        {isOwner ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <button className="p-2 hover:bg-neutral-100 rounded-lg">
@@ -371,6 +403,19 @@ export default function PostDetailPage() {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={handleDeletePost} className="text-red-600">
                                         Xóa
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="p-2 hover:bg-neutral-100 rounded-lg">
+                                        <MoreVertical className="w-5 h-5 text-neutral-600" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => setReportDialogOpen(true)}>
+                                        Báo cáo vi phạm
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -501,6 +546,7 @@ export default function PostDetailPage() {
                                         setExpandedComments(prev => new Set(prev).add(parentId));
                                     }}
                                     onDelete={handleDeleteComment}
+                                    onEdit={handleEditComment}
                                     isExpanded={expandedComments.has(comment.id)}
                                     onToggleExpand={() => {
                                         setExpandedComments(prev => {
@@ -588,6 +634,14 @@ export default function PostDetailPage() {
                     )}
                 </div>
             </div>
+
+            {/* Report Dialog */}
+            <ReportDialog
+                targetType={ReportTargetType.POST}
+                targetId={postId}
+                open={reportDialogOpen}
+                onOpenChange={setReportDialogOpen}
+            />
         </div >
     );
 }

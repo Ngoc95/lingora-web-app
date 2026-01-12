@@ -4,6 +4,8 @@ import { Post, PostTopic, PostStatus } from "@/types/forum";
 import { Heart, MessageCircle, MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { ImageGallery } from "./ImageGallery"; // Import ImageGallery
+import { ReportDialog } from "@/components/shared/ReportDialog";
+import { TargetType } from "@/types/report";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -41,6 +43,7 @@ export function PostCard({
 }: PostCardProps) {
     const isOwner = post.createdBy.id === currentUserId;
     const [menuOpen, setMenuOpen] = useState(false);
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
     const handleLikeClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -114,7 +117,7 @@ export function PostCard({
                                 <MoreVertical className="w-5 h-5 text-neutral-600" />
                             </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             {isOwner ? (
                                 <>
                                     <DropdownMenuItem onClick={onEditPost}>
@@ -141,7 +144,14 @@ export function PostCard({
                                     </DropdownMenuItem>
                                 </>
                             ) : (
-                                <DropdownMenuItem>Báo cáo vi phạm</DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setReportDialogOpen(true);
+                                    }}
+                                >
+                                    Báo cáo vi phạm
+                                </DropdownMenuItem>
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -212,6 +222,14 @@ export function PostCard({
                     <span>{post.commentCount}</span>
                 </button>
             </div>
+
+            {/* Report Dialog */}
+            <ReportDialog
+                targetType={TargetType.POST}
+                targetId={post.id}
+                open={reportDialogOpen}
+                onOpenChange={setReportDialogOpen}
+            />
         </div>
     );
 }
