@@ -24,6 +24,21 @@ interface NotificationItemProps {
     isMarking?: boolean;
 }
 
+// Notification type labels for display
+const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
+    "Change password": "Đổi mật khẩu",
+    "Like": "Thích",
+    "Comment": "Bình luận",
+    "Order": "Đơn hàng",
+    "Warning": "Cảnh báo",
+    "CONTENT_DELETED": "Nội dung đã bị xóa",
+    "Content deleted": "Nội dung đã bị xóa",
+    "Withdrawal processing": "Đang xử lý rút tiền",
+    "Withdrawal completed": "Rút tiền thành công",
+    "Withdrawal rejected": "Rút tiền bị từ chối",
+    "Withdrawal failed": "Rút tiền thất bại",
+};
+
 // Get icon based on notification type
 function getNotificationIcon(type: NotificationType) {
     switch (type) {
@@ -132,7 +147,7 @@ export function NotificationItem({
                 {/* Title with unread indicator */}
                 <div className="flex items-center gap-2 mb-1">
                     <p className="font-semibold text-sm text-[var(--neutral-900)]">
-                        {notification.type}
+                        {NOTIFICATION_TYPE_LABELS[notification.type] || notification.type}
                     </p>
                     {!notification.isRead && (
                         <div className="w-2 h-2 rounded-full bg-[var(--primary-500)]" />
