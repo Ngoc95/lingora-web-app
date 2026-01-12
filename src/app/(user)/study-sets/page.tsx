@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useStudySetList } from "@/hooks/useStudySet";
 import { StudySetCard } from "@/components/studysets";
 import type { StudySet } from "@/types/studySet";
+import { Pagination } from "@/components/ui/pagination";
 
 type TabType = "all" | "my";
 
@@ -164,35 +165,11 @@ export default function StudySetsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <button
-                  onClick={() => setPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={cn(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    currentPage === 1
-                      ? "text-neutral-400 cursor-not-allowed"
-                      : "text-neutral-700 hover:bg-neutral-100"
-                  )}
-                >
-                  Trước
-                </button>
-                <span className="px-4 py-2 text-neutral-600">
-                  {currentPage} / {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={cn(
-                    "px-4 py-2 rounded-lg font-medium transition-colors",
-                    currentPage === totalPages
-                      ? "text-neutral-400 cursor-not-allowed"
-                      : "text-neutral-700 hover:bg-neutral-100"
-                  )}
-                >
-                  Sau
-                </button>
-              </div>
+              <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+              />
             )}
           </>
         )}

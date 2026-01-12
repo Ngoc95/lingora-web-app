@@ -9,6 +9,7 @@ import { GameTypeSelector } from "@/components/learn/GameTypeSelector";
 import { vocabularyService } from "@/services/vocabulary.service";
 import { GameType } from "@/types/vocabulary";
 import type { WordWithProgress } from "@/types/vocabulary";
+import { Pagination } from "@/components/ui/pagination";
 
 // Mock data removed
 
@@ -285,24 +286,12 @@ export default function TopicDetailPage() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-neutral-200">
-                    <button
-                      onClick={() => handlePageChange(page - 1)}
-                      disabled={page === 1}
-                      className="px-4 py-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Trước
-                    </button>
-                    <span className="text-sm font-medium text-neutral-600">
-                      Trang {page} / {totalPages}
-                    </span>
-                    <button
-                      onClick={() => handlePageChange(page + 1)}
-                      disabled={page === totalPages}
-                      className="px-4 py-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Sau
-                    </button>
+                  <div className="mt-6 pt-4 border-t border-neutral-200">
+                      <Pagination
+                          currentPage={page}
+                          totalPages={totalPages}
+                          onPageChange={handlePageChange}
+                      />
                   </div>
                 )}
               </>

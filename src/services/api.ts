@@ -191,6 +191,12 @@ export const api = {
       body: body ? JSON.stringify(body) : undefined,
     }),
 
+  put: <T>(endpoint: string, body?: unknown) =>
+    apiClient<T>(endpoint, {
+      method: "PUT",
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
   delete: <T>(endpoint: string) =>
     apiClient<T>(endpoint, { method: "DELETE" }),
 };
