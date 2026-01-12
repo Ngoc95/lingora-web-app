@@ -66,7 +66,7 @@ export function LoginForm() {
         <div className="space-y-2">
           <label
             htmlFor="login-identifier"
-            className="text-sm font-medium text-[var(--neutral-900)]"
+            className="text-sm font-medium text-[var(--neutral-900)] mb-2 block"
           >
             Tên đăng nhập hoặc Email
           </label>
