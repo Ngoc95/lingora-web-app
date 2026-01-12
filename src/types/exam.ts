@@ -94,6 +94,18 @@ export interface ExamAttempt {
   submittedAt?: string;
   sectionProgress?: Record<number, SectionProgress>;
   scoreSummary?: ScoreSummary;
+  user?: {
+    id: number;
+    username: string;
+    email?: string;
+    avatar?: string;
+  };
+  exam?: {
+    id: number;
+    title: string;
+    code: string;
+    examType?: ExamType;
+  };
 }
 
 export interface SectionProgress {
@@ -109,6 +121,13 @@ export interface ScoreSummary {
   sections: SectionScore[];
   overallBand?: number;
   overallScore?: number;
+  bands?: {
+    listening?: number;
+    reading?: number;
+    writing?: number;
+    speaking?: number;
+    overall?: number;
+  };
 }
 
 export interface SectionScore {

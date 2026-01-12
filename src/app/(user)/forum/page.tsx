@@ -9,7 +9,7 @@ import { FilterBar } from "./_components/FilterBar";
 import { PostCard } from "./_components/PostCard";
 
 import { CreatePostDialog } from "./_components/CreatePostDialog";
-import { Pagination } from "./_components/Pagination";
+import { Pagination } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 

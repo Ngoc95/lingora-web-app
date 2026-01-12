@@ -8,6 +8,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "../shared/Logo";
 
 export function AuthPageContent() {
   const router = useRouter();
@@ -44,11 +45,17 @@ export function AuthPageContent() {
         <ArrowLeft className="w-5 h-5" />
         Về trang chủ
       </Link>
-      <div className="relative w-full max-w-5xl h-[650px] bg-white rounded-3xl shadow-2xl overflow-hidden">
-        {/* Sliding Overlay Panel */}
+      <div className="relative w-full max-w-5xl min-h-[550px] md:h-[650px] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:block">
+        
+        {/* Mobile Header (Logo) - Visible only on mobile */}
+        <div className="md:hidden pt-8 pb-4 flex flex-col items-center">
+            <Logo className="pt-10"/>
+        </div>
+
+        {/* Sliding Overlay Panel - Hidden on Mobile */}
         <div
           className={cn(
-            "absolute top-0 z-30 h-full w-1/2 bg-gradient-to-br from-[var(--primary-500)] to-[var(--primary-600)] transition-all duration-700 ease-in-out flex items-center justify-center",
+            "hidden md:flex absolute top-0 z-30 h-full w-1/2 bg-gradient-to-br from-[var(--primary-500)] to-[var(--primary-600)] transition-all duration-700 ease-in-out items-center justify-center",
             isLogin ? "left-1/2 rounded-l-[100px]" : "left-0 rounded-r-[100px]"
           )}
         >
@@ -79,17 +86,23 @@ export function AuthPageContent() {
         </div>
 
         {/* Forms Container */}
-        <div className="flex h-full">
+        <div className="flex-1 flex flex-col md:flex-row h-full relative">
           {/* Login Form - Left Side */}
+          {/* Mobile: Show if isLogin. Desktop: Always render but control opacity */}
           <div
             className={cn(
-              "w-1/2 h-full flex items-center justify-center p-8 transition-all duration-700",
-              isLogin ? "opacity-100" : "opacity-0 pointer-events-none"
+              "w-full md:w-1/2 h-full flex flex-col items-center justify-center p-6 md:p-8 transition-all duration-700",
+              // Desktop: positioning
+              "md:absolute md:top-0 md:left-0",
+              // Visibility Logic
+              isLogin 
+                ? "flex opacity-100 z-20"  // Active state
+                : "hidden md:flex md:opacity-0 md:pointer-events-none md:z-10" // Inactive state
             )}
           >
             <div className="w-full max-w-sm">
-              <div className="mb-6">
-                <h2 className="text-3xl font-bold text-[var(--neutral-900)] mb-2">
+              <div className="mb-6 text-center md:text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-[var(--neutral-900)] mb-2">
                   Đăng nhập
                 </h2>
                 <p className="text-[var(--neutral-600)]">
@@ -97,19 +110,37 @@ export function AuthPageContent() {
                 </p>
               </div>
               <LoginForm />
+              
+              {/* Mobile Toggle Link */}
+              <div className="mt-8 text-center md:hidden">
+                <p className="text-neutral-600 text-sm">
+                  Chưa có tài khoản?{" "}
+                  <button
+                    onClick={() => setIsLogin(false)}
+                    className="text-[var(--primary-600)] font-semibold hover:underline"
+                  >
+                    Đăng ký ngay
+                  </button>
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Register Form - Right Side */}
           <div
             className={cn(
-              "w-1/2 h-full flex items-center justify-center p-8 transition-all duration-700",
-              isLogin ? "opacity-0 pointer-events-none" : "opacity-100"
+              "w-full md:w-1/2 h-full flex flex-col items-center justify-center p-6 md:p-8 transition-all duration-700",
+               // Desktop: positioning
+              "md:absolute md:top-0 md:right-0",
+              // Visibility Logic
+              !isLogin 
+                ? "flex opacity-100 z-20" 
+                : "hidden md:flex md:opacity-0 md:pointer-events-none md:z-10"
             )}
           >
             <div className="w-full max-w-sm">
-              <div className="mb-6">
-                <h2 className="text-3xl font-bold text-[var(--neutral-900)] mb-2">
+              <div className="mb-6 text-center md:text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-[var(--neutral-900)] mb-2">
                   Đăng ký
                 </h2>
                 <p className="text-[var(--neutral-600)]">
@@ -117,6 +148,19 @@ export function AuthPageContent() {
                 </p>
               </div>
               <RegisterForm />
+
+               {/* Mobile Toggle Link */}
+               <div className="mt-8 text-center md:hidden">
+                <p className="text-neutral-600 text-sm">
+                  Đã có tài khoản?{" "}
+                  <button
+                    onClick={() => setIsLogin(true)}
+                    className="text-[var(--primary-600)] font-semibold hover:underline"
+                  >
+                    Đăng nhập ngay
+                  </button>
+                </p>
+              </div>
             </div>
           </div>
         </div>

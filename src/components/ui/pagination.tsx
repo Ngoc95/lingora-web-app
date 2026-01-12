@@ -26,10 +26,11 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
 
     const pages = generatePagination();
 
+    // Hide if only 1 page or invalid
     if (totalPages <= 1) return null;
 
     return (
-        <div className="flex items-center justify-center gap-2 mt-8">
+        <div className="flex items-center justify-center gap-2 mt-4">
             <Button
                 variant="outline"
                 size="icon"

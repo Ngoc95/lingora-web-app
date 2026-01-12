@@ -84,14 +84,12 @@ export function LoginForm() {
 
         {/* Password */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label
+          <label
               htmlFor="login-password"
               className="text-sm font-medium text-[var(--neutral-900)]"
             >
               Mật khẩu
             </label>
-          </div>
           <div className="relative">
             <input
               id="login-password"

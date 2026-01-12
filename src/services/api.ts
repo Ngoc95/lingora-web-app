@@ -167,8 +167,16 @@ export async function apiClient<T>(
 
 // Utility methods
 export const api = {
-  get: <T>(endpoint: string, params?: Record<string, string | number | boolean | null | undefined> | object) =>
-    apiClient<T>(endpoint, { method: "GET", params: params as Record<string, string | number | boolean | null | undefined> }),
+  get: <T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | null | undefined> | object,
+    options?: Omit<FetchOptions, "method" | "params">
+  ) =>
+    apiClient<T>(endpoint, {
+      method: "GET",
+      params: params as Record<string, string | number | boolean | null | undefined>,
+      ...options,
+    }),
 
   post: <T>(endpoint: string, body?: unknown, options: Omit<FetchOptions, "method" | "body"> = {}) =>
     apiClient<T>(endpoint, {
@@ -180,6 +188,12 @@ export const api = {
   patch: <T>(endpoint: string, body?: unknown) =>
     apiClient<T>(endpoint, {
       method: "PATCH",
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
+  put: <T>(endpoint: string, body?: unknown) =>
+    apiClient<T>(endpoint, {
+      method: "PUT",
       body: body ? JSON.stringify(body) : undefined,
     }),
 

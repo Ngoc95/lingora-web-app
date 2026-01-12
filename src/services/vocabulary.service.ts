@@ -4,6 +4,64 @@
 // ============================================================
 
 import { api } from "./api";
+
+export interface Word {
+  id: number;
+  word: string;
+  meaning: string;
+  vnMeaning?: string; 
+  type: string;
+  cefrLevel: string;
+  topic?: { id: number; name: string };
+  example?: string;
+  exampleTranslation?: string;
+  audioUrl?: string;
+  imageUrl?: string;
+  phonetic?: string;
+}
+
+export interface WordListResponse {
+  currentPage: number;
+  totalPages: number;
+  total: number;
+  words: Word[];
+}
+
+export interface CreateWordRequest {
+  word: string;
+  meaning: string;
+  vnMeaning?: string;
+  type: string;
+  cefrLevel: string;
+  topicId?: number;
+  example?: string;
+  exampleTranslation?: string;
+  audioUrl?: string;
+  imageUrl?: string;
+  phonetic?: string;
+}
+
+export interface UpdateWordRequest {
+  word?: string;
+  meaning?: string;
+  vnMeaning?: string;
+  type?: string;
+  cefrLevel?: string;
+  topicId?: number;
+  example?: string;
+  exampleTranslation?: string;
+  audioUrl?: string;
+  imageUrl?: string;
+  phonetic?: string;
+}
+
+export interface VocabularyListMetaData {
+  currentPage: number;
+  totalPages: number;
+  total: number;
+  words: Word[];
+}
+
 import type { ApiResponse, PaginationParams } from "@/types/api";
 import type {
   ProgressSummaryMetaData,
@@ -86,8 +144,35 @@ export const vocabularyService = {
   updateWordProgress: (data: UpdateWordProgressRequest) =>
     api.patch<ApiResponse<UpdateWordProgressMetaData>>("/progress", data),
 
-  // === Dictionary endpoints ===
+  // === Admin endpoints (Now aligned with Lingora_FE /words) ===
+  admin: {
+    getAll: async (page = 1, limit = 10, search?: string, sort?: string, cefrLevel?: string, type?: string, hasTopic?: boolean) => {
+       return api.get<ApiResponse<WordListResponse>>("/words", {
+         page, limit, search, sort, cefrLevel, type, hasTopic
+       });
+    },
 
+    // Nested words in topic (Strict Alignment)
+    getTopicWords: async (topicId: number, page = 1, limit = 10, search?: string, sort?: string, cefrLevel?: string, type?: string) => {
+       // GET /topics/{id}/words
+       return api.get<ApiResponse<WordListResponse>>(`/topics/${topicId}/words`, {
+         page, limit, search, sort, cefrLevel, type
+       });
+    },
+
+    create: async (data: any) => {
+      return api.post<ApiResponse<any>>("/words", data);
+    },
+
+    update: (id: number, data: UpdateWordRequest) =>
+      api.patch<ApiResponse<Word>>(`/words/${id}`, data),
+
+    delete: (id: number) =>
+      api.delete<ApiResponse<any>>(`/words/${id}`),
+  },
+
+  // === Dictionary endpoints ===
+  
   /**
    * Get word suggestions
    * GET /words/suggest

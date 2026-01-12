@@ -1,181 +1,205 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Plus, Upload } from "lucide-react";
-
-interface Exam {
-  id: number;
-  examType: "IELTS" | "TOEIC" | "TOEFL";
-  code: string;
-  title: string;
-  isPublished: boolean;
-  createdAt: string;
-}
-
-const MOCK_EXAMS: Exam[] = [
-  { id: 1, examType: "IELTS", code: "IELTS-001", title: "IELTS Practice Test 1", isPublished: true, createdAt: "2024-12-01" },
-  { id: 2, examType: "IELTS", code: "IELTS-002", title: "IELTS Practice Test 2", isPublished: true, createdAt: "2024-12-05" },
-  { id: 3, examType: "TOEIC", code: "TOEIC-001", title: "TOEIC Practice Test 1", isPublished: false, createdAt: "2024-12-10" },
-];
+import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Upload, ListTodo } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ExamModal } from "@/components/admin/exams/ExamModal";
+import { ExamImportModal } from "@/components/admin/exams/ExamImportModal";
+import { examAdminService, Exam, ExamAttempt } from "@/services/admin/exam.service";
+import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
+import { format } from "date-fns";
 
 export default function AdminExamsPage() {
-  const [activeTab, setActiveTab] = useState<"exams" | "attempts">("exams");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [publishedFilter, setPublishedFilter] = useState("all");
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-neutral-900">Quản lý Đề thi</h1>
+        </div>
+        <p className="text-neutral-600 mt-1">Quản lý các đề thi và xem lịch sử làm bài</p>
+      </div>
 
-  const filteredExams = MOCK_EXAMS.filter((exam) => {
-    const matchesSearch = exam.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exam.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === "all" || exam.examType === typeFilter;
-    const matchesPublished = publishedFilter === "all" || 
-                            (publishedFilter === "published" && exam.isPublished) ||
-                            (publishedFilter === "unpublished" && !exam.isPublished);
-    return matchesSearch && matchesType && matchesPublished;
-  });
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-100">
+          <Tabs defaultValue="exams" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="exams">Danh sách đề thi</TabsTrigger>
+              <TabsTrigger value="attempts">Lịch sử làm bài</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="exams">
+               <ExamsList />
+            </TabsContent>
+            
+            <TabsContent value="attempts">
+               <AttemptsList />
+            </TabsContent>
+          </Tabs>
+      </div>
+    </div>
+  );
+}
 
-  const getExamColor = (type: string) => {
-    switch (type) {
-      case "IELTS": return "bg-blue-100 text-blue-700";
-      case "TOEIC": return "bg-green-100 text-green-700";
-      case "TOEFL": return "bg-purple-100 text-purple-700";
-      default: return "bg-neutral-100 text-neutral-700";
+function ExamsList() {
+  const router = useRouter();
+  const [data, setData] = useState<Exam[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchExams = async (pageIndex: number) => {
+    setLoading(true);
+    try {
+      const response = await examAdminService.getAll(pageIndex);
+      setData(response.metaData.exams);
+      setTotalPages(response.metaData.totalPages);
+      setPage(response.metaData.currentPage);
+    } catch (error) {
+      toast.error("Không thể tải danh sách đề thi");
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => { fetchExams(1); }, []);
+
+  const handleCreate = () => { setEditingExam(null); setIsModalOpen(true); };
+  const handleEdit = (exam: Exam) => { setEditingExam(exam); setIsModalOpen(true); };
+  const handleDelete = async (id: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa đề thi này?")) return;
+    try { await examAdminService.delete(id); toast.success("Xóa thành công"); fetchExams(page); } catch { toast.error("Lỗi xóa"); }
+  };
+  const handleModalSubmit = async (formData: any) => {
+    setIsSubmitting(true);
+    try {
+      if (editingExam) await examAdminService.update(editingExam.id, formData);
+      else await examAdminService.create(formData);
+      toast.success(editingExam ? "Cập nhật thành công" : "Thêm mới thành công");
+      setIsModalOpen(false); fetchExams(page);
+    } catch { toast.error("Lỗi lưu dữ liệu"); } finally { setIsSubmitting(false); }
+  };
+
+  const columns: ColumnDef<Exam>[] = [
+    { accessorKey: "id", header: "ID", cell: ({ row }) => <div className="w-[50px]">#{row.getValue("id")}</div> },
+    { accessorKey: "title", header: "Tiêu đề", cell: ({ row }) => <div className="font-medium text-primary">{row.getValue("title")}</div> },
+    { accessorKey: "code", header: "Mã đề" },
+    { accessorKey: "examType", header: "Loại đề" },
+    { 
+       accessorKey: "isPublished", header: "Trạng thái", 
+       cell: ({ row }) => row.getValue("isPublished") ? 
+          <span className="text-blue-700 bg-blue-50 px-2 py-1 rounded text-xs">Công khai</span> : 
+          <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded text-xs">Ẩn</span> 
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}><Pencil className="w-4 h-4 text-blue-500" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(row.original.id)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
+        </div>
+      )
+    }
+  ];
+
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-900">Exam Management</h1>
-            <p className="text-neutral-600 mt-1">Manage exams and view attempts</p>
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-gradient-primary text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
-            <Upload className="w-5 h-5" />
-            Import JSON
-          </button>
+    <div>
+        <div className="flex justify-end gap-2 mb-4">
+            <Button variant="outline" onClick={() => setIsImportModalOpen(true)}><Upload className="w-4 h-4 mr-2" /> Nhập JSON</Button>
+            <Button onClick={handleCreate} className="bg-primary text-white"><Plus className="w-4 h-4 mr-2" /> Thêm đề thi</Button>
         </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4">
-          {[
-            { id: "exams", label: "Exams" },
-            { id: "attempts", label: "Attempts" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "bg-primary text-white"
-                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search and Filter */}
-        {activeTab === "exams" && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-neutral-100">
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="text"
-                  placeholder="Search exams..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-neutral-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-4 py-2 border border-neutral-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                <option value="all">All Types</option>
-                <option value="IELTS">IELTS</option>
-                <option value="TOEIC">TOEIC</option>
-                <option value="TOEFL">TOEFL</option>
-              </select>
-              <select
-                value={publishedFilter}
-                onChange={(e) => setPublishedFilter(e.target.value)}
-                className="px-4 py-2 border border-neutral-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                <option value="all">All Status</option>
-                <option value="published">Published</option>
-                <option value="unpublished">Unpublished</option>
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      {activeTab === "exams" ? (
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-neutral-100/50 border-b border-neutral-100">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Code</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Published</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {filteredExams.map((exam) => (
-                  <tr key={exam.id} className="hover:bg-neutral-100/50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-neutral-900">{exam.id}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-neutral-900">{exam.title}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getExamColor(exam.examType)}`}>
-                        {exam.examType}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-neutral-600">{exam.code}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        exam.isPublished ? "bg-green-100 text-green-700" : "bg-neutral-100 text-neutral-700"
-                      }`}>
-                        {exam.isPublished ? "✅ Yes" : "❌ No"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button className="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded transition-colors">
-                          View
-                        </button>
-                        <button className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl p-12 shadow-sm border border-neutral-100 text-center">
-          <div className="text-6xl mb-4">📊</div>
-          <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-            Exam Attempts
-          </h3>
-          <p className="text-neutral-600">
-            View and manage all exam attempts here
-          </p>
-        </div>
-      )}
+        <DataTable columns={columns} data={data} pageCount={totalPages} pageIndex={page} onPageChange={fetchExams} isLoading={loading} />
+        <ExamModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleModalSubmit} initialData={editingExam} isLoading={isSubmitting} />
+        <ExamImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onSuccess={() => fetchExams(1)} />
     </div>
   );
+}
+
+function AttemptsList() {
+    const router = useRouter();
+    const [data, setData] = useState<ExamAttempt[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [search, setSearch] = useState(""); 
+    
+    // Add debounce manually or just use standard
+    useEffect(() => {
+      const timer = setTimeout(() => setSearch(searchTerm), 500);
+      return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const fetchAttempts = async (pageIndex: number) => {
+        setLoading(true);
+        try {
+            // Using adminListAttempts for global history
+            const response = await examAdminService.adminListAttempts({ 
+                page: pageIndex, 
+                limit: 10,
+                search: search 
+            });
+            setData(response.metaData.attempts || []);
+            setTotalPages(response.metaData.totalPages);
+            setPage(response.metaData.currentPage);
+        } catch {
+            toast.error("Không thể tải lịch sử làm bài");
+        } finally { setLoading(false); }
+    };
+
+    useEffect(() => { fetchAttempts(1); }, [search]);
+
+    const columns: ColumnDef<ExamAttempt>[] = [
+         { accessorKey: "id", header: "ID", cell: ({ row }) => <div>#{row.getValue("id")}</div> },
+         { 
+             id: "user", header: "Người dùng", 
+             cell: ({ row }) => (
+                 <div>
+                    <div className="font-medium">{row.original.user?.username || "Unknown"}</div>
+                    <div className="text-xs text-gray-500">{row.original.user?.email}</div>
+                 </div>
+             ) 
+         },
+         { 
+             id: "exam", header: "Đề thi", 
+             cell: ({ row }) => (
+                 <div>
+                    <div className="font-medium text-primary">{row.original.exam?.title || "Unknown Exam"}</div>
+                    <div className="text-xs text-gray-500">{row.original.exam?.code}</div>
+                 </div>
+             ) 
+         },
+         { accessorKey: "overallScore", header: "Điểm", cell: ({ row }) => <div className="font-bold text-primary">{row.original.scoreSummary?.bands?.overall ?? row.original.scoreSummary?.overallScore ?? "-"}</div> },
+         { accessorKey: "submittedAt", header: "Ngày nộp", cell: ({ row }) => <div>{row.original.submittedAt ? format(new Date(row.original.submittedAt as any), "dd/MM/yyyy HH:mm") : "-"}</div> },
+         {
+            id: "actions",
+            cell: ({ row }) => (
+                <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/exams/attempts/${row.original.id}`)}>
+                    <Eye className="w-4 h-4 text-blue-500" />
+                </Button>
+            )
+         }
+    ];
+
+    return (
+        <div className="space-y-4">
+             <div className="flex items-center gap-2 max-w-sm border rounded-lg px-3 py-2 bg-white">
+                <Search className="w-4 h-4 text-gray-500" />
+                <input 
+                    className="outline-none text-sm w-full" 
+                    placeholder="Tìm kiếm người dùng hoặc đề thi..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+             </div>
+             <DataTable columns={columns} data={data} pageCount={totalPages} pageIndex={page} onPageChange={fetchAttempts} isLoading={loading} />
+        </div>
+    );
 }

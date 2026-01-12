@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, TrendingUp } from "lucide-react";
+import { Search, TrendingUp, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CategoryCard } from "@/components/vocabulary/CategoryCard";
 import { vocabularyService } from "@/services/vocabulary.service";
-import type { CategoryProgress, ProgressSummaryMetaData } from "@/types/vocabulary";
+import type { CategoryProgress } from "@/types/vocabulary";
+import { Pagination } from "@/components/ui/pagination";
 
 // Mock data for development
 const MOCK_CATEGORIES: CategoryProgress[] = [
@@ -122,97 +123,82 @@ export default function VocabularyPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-neutral-100/50 pb-20">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--neutral-900)]">
-          Học từ vựng
-        </h1>
-        <p className="text-[var(--neutral-600)]">
-          Chọn danh mục để bắt đầu học
-        </p>
-      </div>
-
-      {/* Stats Card */}
-      <div className="bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] rounded-xl p-6 text-white">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-white/80 text-sm">Tổng từ đã học</p>
-            <p className="text-2xl font-bold">{totalLearned} từ</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--neutral-400)]" />
-        <Input
-          type="text"
-          placeholder="Tìm kiếm danh mục..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1); // Reset to page 1 on search
-          }}
-          className="pl-10"
-        />
-      </div>
-
-      {/* Categories Grid */}
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="h-40 rounded-xl bg-[var(--neutral-100)] animate-pulse"
-            />
-          ))}
-        </div>
-      ) : categories.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-[var(--neutral-600)]">
-            Không tìm thấy danh mục nào
+      <div className="bg-white border-b border-neutral-100">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <h1 className="text-2xl font-bold text-neutral-900">
+            Học từ vựng
+          </h1>
+          <p className="text-neutral-600 mt-1">
+            Chọn danh mục để bắt đầu học
           </p>
         </div>
-      ) : (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                href={`/vocabulary/category/${category.id}`}
-              />
-            ))}
-          </div>
+      </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-[var(--neutral-200)]">
-              <button
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-                className="px-4 py-2 rounded-lg border border-[var(--neutral-200)] hover:bg-[var(--neutral-50)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Trước
-              </button>
-              <span className="text-sm font-medium text-[var(--neutral-600)]">
-                Trang {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-                className="px-4 py-2 rounded-lg border border-[var(--neutral-200)] hover:bg-[var(--neutral-50)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Sau
-              </button>
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Stats Card */}
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6" />
             </div>
-          )}
-        </>
-      )}
+            <div>
+              <p className="text-white/80 text-sm">Tổng từ đã học</p>
+              <p className="text-2xl font-bold">{totalLearned} từ</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+          <Input
+            type="text"
+            placeholder="Tìm kiếm danh mục..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1); // Reset to page 1 on search
+            }}
+            className="pl-10 h-11 bg-white"
+          />
+        </div>
+
+        {/* Categories Grid */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-neutral-600">
+              Không tìm thấy danh mục nào
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  href={`/vocabulary/category/${category.id}`}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+              />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,82 +1,231 @@
 "use client";
+import { Search, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { TopicModal } from "@/components/admin/topics/TopicModal";
+import { topicService, Topic, CreateTopicRequest } from "@/services/admin/topic.service";
+import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "react-hot-toast";
 
-import { Plus } from "lucide-react";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-interface Topic {
-  id: number;
-  name: string;
-  description: string;
-  wordCount: number;
-  categoryName: string;
+function AdminTopicsContent() {
+  const router = useRouter();
+  // Filters
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get("categoryId") ? Number(searchParams.get("categoryId")) : undefined;
+
+  const [data, setData] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  const [sort, setSort] = useState<string>("-id");
+
+  const fetchTopics = async (pageIndex: number) => {
+    setLoading(true);
+    try {
+      const response = await topicService.getAll(pageIndex, 10, debouncedSearch, sort);
+      setData(response.metaData.topics);
+      setTotalPages(response.metaData.totalPages);
+      setPage(response.metaData.currentPage);
+    } catch (error) {
+       // ... error handling
+      console.error("Failed to fetch topics:", error);
+      toast.error("Không thể tải danh sách chủ đề");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTopics(1);
+  }, [debouncedSearch, sort]);
+
+  useEffect(() => {
+    fetchTopics(1);
+  }, []);
+
+  const handlePageChange = (newPage: number) => {
+    fetchTopics(newPage);
+  };
+
+  const handleCreate = () => {
+    setEditingTopic(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (topic: Topic) => {
+    setEditingTopic(topic);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa chủ đề này?")) return;
+    
+    try {
+      await topicService.delete(id);
+      toast.success("Xóa chủ đề thành công");
+      fetchTopics(page);
+    } catch (error) {
+      console.error("Failed to delete topic:", error);
+      toast.error("Không thể xóa chủ đề");
+    }
+  };
+
+  const handleModalSubmit = async (formData: CreateTopicRequest) => {
+    setIsSubmitting(true);
+    try {
+      if (editingTopic) {
+        await topicService.update(editingTopic.id, formData);
+        toast.success("Cập nhật chủ đề thành công");
+      } else {
+        await topicService.create(formData);
+        toast.success("Thêm chủ đề thành công");
+      }
+      setIsModalOpen(false);
+      fetchTopics(page);
+    } catch (error) {
+      console.error("Failed to save topic:", error);
+      toast.error(editingTopic ? "Không thể cập nhật chủ đề" : "Không thể thêm chủ đề");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const columns: ColumnDef<Topic>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => <div className="w-[50px]">#{row.getValue("id")}</div>,
+    },
+    {
+      accessorKey: "name",
+      header: "Tên chủ đề",
+      cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "description",
+      header: "Mô tả",
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate" title={row.getValue("description")}>
+          {row.getValue("description")}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "totalWords",
+      header: "Số từ",
+      cell: ({ row }) => <div className="text-center">{row.getValue("totalWords")}</div>,
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const topic = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleEdit(topic); }}>
+              <Pencil className="h-4 w-4 text-blue-500" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(topic.id); }}>
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div className="p-6">
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-neutral-900">Quản lý Chủ đề</h1>
+            <p className="text-neutral-600 mt-1">Quản lý các chủ đề bài học</p>
+          </div>
+          <Button onClick={handleCreate} className="bg-primary text-white">
+            <Plus className="w-5 h-5 mr-2" />
+            Thêm chủ đề
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border shadow-sm">
+            <div className="relative flex-1 min-w-[200px]">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+               <Input
+                 placeholder="Tìm kiếm chủ đề..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 className="pl-9 bg-gray-50 border-gray-200 focus:bg-white transition-all"
+               />
+            </div>
+
+            <div className="flex items-center gap-2">
+                <Select value={sort} onValueChange={setSort}>
+                    <SelectTrigger className="w-[200px] bg-gray-50 border-gray-200">
+                         <div className="flex items-center gap-2">
+                            <ArrowUpDown className="w-3 h-3 text-gray-500" />
+                            <SelectValue />
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="-id">Mới nhất</SelectItem>
+                        <SelectItem value="+id">Cũ nhất</SelectItem>
+                        <SelectItem value="+name">Tên (A-Z)</SelectItem>
+                        <SelectItem value="-name">Tên (Z-A)</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-100">
+        <DataTable
+          columns={columns}
+          data={data}
+          pageCount={totalPages}
+          pageIndex={page}
+          onPageChange={handlePageChange}
+          isLoading={loading}
+          onRowClick={(row) => router.push(`/admin/topics/${row.id}`)}
+        />
+      </div>
+
+      <TopicModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleModalSubmit}
+        initialData={editingTopic}
+        isLoading={isSubmitting}
+      />
+    </div>
+  );
 }
-
-const MOCK_TOPICS: Topic[] = [
-  { id: 1, name: "Greetings", description: "Basic greetings", wordCount: 15, categoryName: "Basic English" },
-  { id: 2, name: "Numbers", description: "Numbers 1-100", wordCount: 100, categoryName: "Basic English" },
-  { id: 3, name: "Meetings", description: "Business meeting vocabulary", wordCount: 25, categoryName: "Business English" },
-];
 
 export default function AdminTopicsPage() {
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-900">Topic Management</h1>
-            <p className="text-neutral-600 mt-1">Manage all vocabulary topics</p>
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-gradient-primary text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
-            <Plus className="w-5 h-5" />
-            Add Topic
-          </button>
-        </div>
-      </div>
-
-      {/* Topics Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-neutral-100/50 border-b border-neutral-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Words</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-900 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {MOCK_TOPICS.map((topic) => (
-                <tr key={topic.id} className="hover:bg-neutral-100/50 transition-colors">
-                  <td className="px-6 py-4 text-sm text-neutral-900">{topic.id}</td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="text-sm font-medium text-neutral-900">{topic.name}</div>
-                      <div className="text-xs text-neutral-600">{topic.description}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-neutral-600">{topic.categoryName}</td>
-                  <td className="px-6 py-4 text-sm text-neutral-900">{topic.wordCount}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded transition-colors">
-                        Edit
-                      </button>
-                      <button className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors">
-                        Words
-                      </button>
-                      <button className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminTopicsContent />
+    </Suspense>
   );
 }
