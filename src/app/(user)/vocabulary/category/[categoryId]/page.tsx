@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { TopicCard } from "@/components/vocabulary/TopicCard";
@@ -82,80 +82,79 @@ export default function CategoryDetailPage() {
   }, [categoryId, searchQuery]);
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-neutral-100/50 pb-20">
       {/* Back Button + Header */}
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-[var(--neutral-600)] hover:text-[var(--primary-500)] mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Quay lại</span>
-        </button>
+      <div className="bg-white border-b border-neutral-100">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 text-neutral-600 hover:text-primary-500 mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Quay lại</span>
+          </button>
 
-        <h1 className="text-2xl font-bold text-[var(--neutral-900)]">
-          {categoryName || "Đang tải..."}
-        </h1>
-        <p className="text-[var(--neutral-600)]">
-          {categoryDescription}
-        </p>
-      </div>
-
-      {/* Progress Card */}
-      <div className="bg-white rounded-xl border border-[var(--neutral-200)] p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-[var(--neutral-600)]">
-            Tiến độ danh mục
-          </span>
-          <span className="text-sm font-medium text-[var(--primary-500)]">
-            {completedTopics}/{totalTopics} chủ đề hoàn thành
-          </span>
-        </div>
-        <Progress value={progressPercent} className="h-2" />
-        <p className="mt-2 text-right text-sm text-[var(--neutral-600)]">
-          {progressPercent.toFixed(1)}%
-        </p>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--neutral-400)]" />
-        <Input
-          type="text"
-          placeholder="Tìm kiếm chủ đề..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
-      {/* Topics Grid */}
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="h-32 rounded-xl bg-[var(--neutral-100)] animate-pulse"
-            />
-          ))}
-        </div>
-      ) : topics.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-[var(--neutral-600)]">
-            Không tìm thấy chủ đề nào
+          <h1 className="text-2xl font-bold text-neutral-900">
+            {categoryName || "Đang tải..."}
+          </h1>
+          <p className="text-neutral-600 mt-1">
+            {categoryDescription}
           </p>
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {topics.map((topic) => (
-            <TopicCard
-              key={topic.id}
-              topic={topic}
-              href={`/vocabulary/category/${categoryId}/topic/${topic.id}`}
-            />
-          ))}
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Progress Card */}
+        <div className="bg-white rounded-xl border border-neutral-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-neutral-600">
+              Tiến độ danh mục
+            </span>
+            <span className="text-sm font-medium text-primary-500">
+              {completedTopics}/{totalTopics} chủ đề hoàn thành
+            </span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
+          <p className="mt-2 text-right text-sm text-neutral-600">
+            {progressPercent.toFixed(1)}%
+          </p>
         </div>
-      )}
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+          <Input
+            type="text"
+            placeholder="Tìm kiếm chủ đề..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-11 bg-white"
+          />
+        </div>
+
+        {/* Topics Grid */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+          </div>
+        ) : topics.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-neutral-600">
+              Không tìm thấy chủ đề nào
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {topics.map((topic) => (
+              <TopicCard
+                key={topic.id}
+                topic={topic}
+                href={`/vocabulary/category/${categoryId}/topic/${topic.id}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

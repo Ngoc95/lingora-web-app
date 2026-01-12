@@ -31,6 +31,23 @@ export interface User {
   banReason: string | null;
   createdAt?: string;
   updatedAt?: string;
+  // Streak fields
+  currentStreak?: number;
+  longestStreak?: number;
+  lastActivityDate?: string;
+  hasPassword?: boolean;
+}
+
+export interface UpdateProfileRequest {
+  username?: string;
+  email?: string;
+  avatar?: string;
+  proficiency?: UserProficiency;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword?: string;
+  newPassword: string;
 }
 
 export interface AuthMetaData {

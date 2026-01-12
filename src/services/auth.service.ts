@@ -44,7 +44,11 @@ export const authService = {
    * Get Current User
    * GET /auth/me
    */
-  getMe: () => api.get<ApiResponse<User>>("/auth/me"),
+  getMe: () =>
+    api.get<ApiResponse<User>>("/auth/me", undefined, {
+      cache: "no-store",
+      headers: { Pragma: "no-cache" },
+    }),
 
   /**
    * Request Email Verification OTP

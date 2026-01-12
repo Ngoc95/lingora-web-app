@@ -71,16 +71,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            <span>Hồ sơ</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Cài đặt</span>
-          </DropdownMenuItem>
-          
+        <DropdownMenuGroup> 
           {hasMultipleRoles && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
