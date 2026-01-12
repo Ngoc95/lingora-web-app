@@ -42,7 +42,7 @@ export function AdminTopBar({ onMenuClick, sidebarCollapsed, mobileMenuOpen }: A
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle menu</span>
           </Button>
-          
+
           {/* Title - hidden on mobile when menu is open */}
           <div className={cn(
             "transition-opacity duration-200",
@@ -59,7 +59,7 @@ export function AdminTopBar({ onMenuClick, sidebarCollapsed, mobileMenuOpen }: A
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
-          <NotificationBell count={5} />
+          <NotificationBell />
           <UserMenu
             user={user}
             onLogout={handleLogout}
