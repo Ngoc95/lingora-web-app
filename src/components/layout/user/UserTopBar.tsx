@@ -80,7 +80,7 @@ export function UserTopBar({ title }: UserTopBarProps) {
         {/* Left: Logo + Nav (Desktop) */}
         <div className="flex items-center gap-6">
           <Logo />
-          
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
@@ -115,12 +115,12 @@ export function UserTopBar({ title }: UserTopBarProps) {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
-          <NotificationBell count={3} />
-          <UserMenu 
+          <NotificationBell />
+          <UserMenu
             user={user}
             onLogout={handleLogout}
           />
-          
+
           {/* Mobile Menu Button */}
           <Sheet>
             <SheetTrigger asChild>
