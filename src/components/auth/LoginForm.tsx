@@ -191,7 +191,7 @@ export function LoginForm() {
         </div>
       </div>
 
-      <div className="w-full">
+      <div className="w-full google-login-wrapper">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}

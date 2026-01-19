@@ -186,3 +186,18 @@
 .animate-infinite-scroll:hover {
   animation-play-state: paused;
 }
+
+/* Google Login Button Customization */
+/* Override default Google button styles to match our design system */
+div[data-client-id] > div,
+div[data-client-id] > div > div,
+div[data-client-id] iframe {
+  border-radius: 0.75rem !important; /* 12px - matches rounded-xl */
+  overflow: hidden;
+}
+
+/* Additional styling for the button container */
+.google-login-wrapper {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}

@@ -36,6 +36,11 @@ export function ChangePasswordDialog({
     newPassword?: string;
     confirmPassword?: string;
   }>({});
+  const [touched, setTouched] = useState<{
+    oldPassword?: boolean;
+    newPassword?: boolean;
+    confirmPassword?: boolean;
+  }>({});
 
   useEffect(() => {
     if (open) {
@@ -43,8 +48,76 @@ export function ChangePasswordDialog({
       setNewPassword("");
       setConfirmPassword("");
       setErrors({});
+      setTouched({});
+      setShowOldPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     }
   }, [open]);
+
+  // Real-time validation for old password
+  useEffect(() => {
+    if (touched.oldPassword) {
+      if (user?.hasPassword && !oldPassword) {
+        setErrors((prev) => ({
+          ...prev,
+          oldPassword: "Vui lòng nhập mật khẩu hiện tại",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, oldPassword: undefined }));
+      }
+    }
+  }, [oldPassword, user?.hasPassword, touched.oldPassword]);
+
+  // Real-time validation for new password
+  useEffect(() => {
+    if (touched.newPassword) {
+      if (!newPassword) {
+        setErrors((prev) => ({
+          ...prev,
+          newPassword: "Vui lòng nhập mật khẩu mới",
+        }));
+      } else if (newPassword.length < 6) {
+        setErrors((prev) => ({
+          ...prev,
+          newPassword: "Mật khẩu phải có ít nhất 6 ký tự",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, newPassword: undefined }));
+      }
+
+      // Also revalidate confirm password if it's been touched
+      if (touched.confirmPassword && confirmPassword) {
+        if (newPassword !== confirmPassword) {
+          setErrors((prev) => ({
+            ...prev,
+            confirmPassword: "Mật khẩu xác nhận không khớp",
+          }));
+        } else {
+          setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+        }
+      }
+    }
+  }, [newPassword, confirmPassword, touched.newPassword, touched.confirmPassword]);
+
+  // Real-time validation for confirm password
+  useEffect(() => {
+    if (touched.confirmPassword) {
+      if (!confirmPassword) {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Vui lòng xác nhận mật khẩu",
+        }));
+      } else if (newPassword !== confirmPassword) {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Mật khẩu xác nhận không khớp",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+      }
+    }
+  }, [confirmPassword, newPassword, touched.confirmPassword]);
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -66,6 +139,11 @@ export function ChangePasswordDialog({
     }
 
     setErrors(newErrors);
+    setTouched({
+      oldPassword: true,
+      newPassword: true,
+      confirmPassword: true,
+    });
     return Object.keys(newErrors).length === 0;
   };
 
@@ -113,15 +191,12 @@ export function ChangePasswordDialog({
                 <input
                   type={showOldPassword ? "text" : "password"}
                   value={oldPassword}
-                  onChange={(e) => {
-                    setOldPassword(e.target.value);
-                    setErrors((prev) => ({ ...prev, oldPassword: undefined }));
-                  }}
-                  className={`w-full pl-10 pr-10 py-2.5 bg-neutral-50 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm ${
-                    errors.oldPassword
-                      ? "border-red-300 focus:ring-red-200 focus:border-red-500"
-                      : "border-neutral-200 focus:ring-primary/20 focus:border-primary"
-                  }`}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  onBlur={() => setTouched((prev) => ({ ...prev, oldPassword: true }))}
+                  className={`w-full pl-10 pr-10 py-2.5 bg-neutral-50 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm ${errors.oldPassword
+                    ? "border-red-300 focus:ring-red-200 focus:border-red-500"
+                    : "border-neutral-200 focus:ring-primary/20 focus:border-primary"
+                    }`}
                   placeholder="Nhập mật khẩu hiện tại"
                 />
                 <button
@@ -130,9 +205,9 @@ export function ChangePasswordDialog({
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                 >
                   {showOldPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
                     <Eye className="w-4 h-4" />
+                  ) : (
+                    <EyeOff className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -156,15 +231,12 @@ export function ChangePasswordDialog({
               <input
                 type={showNewPassword ? "text" : "password"}
                 value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setErrors((prev) => ({ ...prev, newPassword: undefined }));
-                }}
-                className={`w-full pl-10 pr-10 py-2.5 bg-neutral-50 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm ${
-                  errors.newPassword
-                    ? "border-red-300 focus:ring-red-200 focus:border-red-500"
-                    : "border-neutral-200 focus:ring-primary/20 focus:border-primary"
-                }`}
+                onChange={(e) => setNewPassword(e.target.value)}
+                onBlur={() => setTouched((prev) => ({ ...prev, newPassword: true }))}
+                className={`w-full pl-10 pr-10 py-2.5 bg-neutral-50 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm ${errors.newPassword
+                  ? "border-red-300 focus:ring-red-200 focus:border-red-500"
+                  : "border-neutral-200 focus:ring-primary/20 focus:border-primary"
+                  }`}
                 placeholder="Nhập mật khẩu mới"
               />
               <button
@@ -173,9 +245,9 @@ export function ChangePasswordDialog({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
               >
                 {showNewPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
                   <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -200,18 +272,12 @@ export function ChangePasswordDialog({
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setErrors((prev) => ({
-                    ...prev,
-                    confirmPassword: undefined,
-                  }));
-                }}
-                className={`w-full pl-10 pr-10 py-2.5 bg-neutral-50 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm ${
-                  errors.confirmPassword
-                    ? "border-red-300 focus:ring-red-200 focus:border-red-500"
-                    : "border-neutral-200 focus:ring-primary/20 focus:border-primary"
-                }`}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
+                className={`w-full pl-10 pr-10 py-2.5 bg-neutral-50 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm ${errors.confirmPassword
+                  ? "border-red-300 focus:ring-red-200 focus:border-red-500"
+                  : "border-neutral-200 focus:ring-primary/20 focus:border-primary"
+                  }`}
                 placeholder="Nhập lại mật khẩu mới"
               />
               <button
@@ -220,9 +286,9 @@ export function ChangePasswordDialog({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
               >
                 {showConfirmPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
                   <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
                 )}
               </button>
             </div>

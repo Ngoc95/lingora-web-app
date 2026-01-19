@@ -171,9 +171,9 @@ export function RegisterForm() {
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--neutral-400)] hover:text-[var(--neutral-600)] transition-colors"
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
                 <Eye className="w-5 h-5" />
+              ) : (
+                <EyeOff className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -205,9 +205,9 @@ export function RegisterForm() {
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--neutral-400)] hover:text-[var(--neutral-600)] transition-colors"
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
                 <Eye className="w-5 h-5" />
+              ) : (
+                <EyeOff className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -234,7 +234,7 @@ export function RegisterForm() {
         </div>
       </div>
 
-      <div className="w-full">
+      <div className="w-full google-login-wrapper">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}

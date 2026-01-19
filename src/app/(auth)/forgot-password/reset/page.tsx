@@ -85,9 +85,9 @@ function ResetPasswordForm() {
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--neutral-400)] hover:text-[var(--neutral-600)]"
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
                 <Eye className="w-5 h-5" />
+              ) : (
+                <EyeOff className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -117,9 +117,9 @@ function ResetPasswordForm() {
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--neutral-400)] hover:text-[var(--neutral-600)]"
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
-              ) : (
                 <Eye className="w-5 h-5" />
+              ) : (
+                <EyeOff className="w-5 h-5" />
               )}
             </button>
           </div>
