@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AuthPageContent } from "@/components/auth/AuthPageContent";
+import { GoogleOAuthProvider } from "@/components/auth/GoogleOAuthProvider";
 
 function LoadingFallback() {
   return (
@@ -11,8 +12,10 @@ function LoadingFallback() {
 
 export default function GetStartedPage() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <AuthPageContent />
-    </Suspense>
+    <GoogleOAuthProvider>
+      <Suspense fallback={<LoadingFallback />}>
+        <AuthPageContent />
+      </Suspense>
+    </GoogleOAuthProvider>
   );
 }

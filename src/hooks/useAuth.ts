@@ -14,6 +14,7 @@ interface AuthState {
   error: string | null;
   login: (data: LoginRequest) => Promise<User>;
   register: (data: RegisterRequest) => Promise<User>;
+  googleLogin: (idToken: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   switchRole: (role: UserRole) => void;
@@ -34,16 +35,16 @@ export const useAuth = create<AuthState>()(
         try {
           const res = await authService.login(data);
           const { user, accessToken } = res.metaData;
-          
+
           setAuthToken(accessToken);
           // Set default active role (admin > learner or just first one)
           const defaultRole = user.roles.find(r => r.name === UserRole.ADMIN)?.name || user.roles[0]?.name || null;
           set({ user, isAuthenticated: true, activeRole: defaultRole, isLoading: false });
           return user;
         } catch (error: any) {
-          set({ 
-            error: error.message || "Đăng nhập thất bại", 
-            isLoading: false 
+          set({
+            error: error.message || "Đăng nhập thất bại",
+            isLoading: false
           });
           throw error;
         }
@@ -54,15 +55,34 @@ export const useAuth = create<AuthState>()(
         try {
           const res = await authService.register(data);
           const { user, accessToken } = res.metaData;
-          
+
           setAuthToken(accessToken);
           const defaultRole = user.roles[0]?.name || null;
           set({ user, isAuthenticated: true, activeRole: defaultRole, isLoading: false });
           return user;
         } catch (error: any) {
-          set({ 
-            error: error.message || "Đăng ký thất bại", 
-            isLoading: false 
+          set({
+            error: error.message || "Đăng ký thất bại",
+            isLoading: false
+          });
+          throw error;
+        }
+      },
+
+      googleLogin: async (idToken: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authService.googleLogin(idToken);
+          const { user, accessToken } = res.metaData;
+
+          setAuthToken(accessToken);
+          const defaultRole = user.roles.find(r => r.name === UserRole.ADMIN)?.name || user.roles[0]?.name || null;
+          set({ user, isAuthenticated: true, activeRole: defaultRole, isLoading: false });
+          return user;
+        } catch (error: any) {
+          set({
+            error: error.message || "Đăng nhập Google thất bại",
+            isLoading: false
           });
           throw error;
         }
@@ -92,8 +112,8 @@ export const useAuth = create<AuthState>()(
           const currentRole = get().activeRole;
           const isValidRole = currentRole && user.roles.some(r => r.name === currentRole);
           const newActiveRole = isValidRole ? currentRole : (user.roles[0]?.name || null);
-          
-          set({ user, isAuthenticated: true, activeRole: newActiveRole }); 
+
+          set({ user, isAuthenticated: true, activeRole: newActiveRole });
         } catch {
           // If checking profile fails, usually means token invalid or user deleted
           // Must call logout to clear server-side cookies (refreshToken)
@@ -111,7 +131,7 @@ export const useAuth = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
-      
+
       switchRole: (role: UserRole) => set({ activeRole: role }),
     }),
     {

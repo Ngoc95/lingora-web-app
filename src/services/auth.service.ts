@@ -28,6 +28,13 @@ export const authService = {
     api.post<AuthResponse>("/auth/register", data),
 
   /**
+   * Google OAuth Login
+   * POST /auth/google
+   */
+  googleLogin: (idToken: string) =>
+    api.post<AuthResponse>("/auth/google", { idToken }),
+
+  /**
    * Logout
    * POST /auth/logout
    */
