@@ -172,7 +172,7 @@ export function DateRangeFilter({ onFilterChange, activeFilter, setActiveFilter 
                                 {/* Display box showing dd/MM/yyyy */}
                                 <div
                                     className="w-full px-3 py-2 text-sm border border-[var(--neutral-200)] rounded-lg bg-white cursor-pointer hover:border-[var(--primary-500)] transition-colors flex items-center justify-between"
-                                    onClick={() => document.getElementById('start-date-input')?.showPicker?.()}
+                                    onClick={() => (document.getElementById('start-date-input') as HTMLInputElement)?.showPicker?.()}
                                 >
                                     <span className={customStartDate ? "text-[var(--neutral-900)]" : "text-[var(--neutral-400)]"}>
                                         {customStartDate ? formatDateDisplay(customStartDate) : "dd/MM/yyyy"}
@@ -199,7 +199,7 @@ export function DateRangeFilter({ onFilterChange, activeFilter, setActiveFilter 
                                 {/* Display box showing dd/MM/yyyy */}
                                 <div
                                     className="w-full px-3 py-2 text-sm border border-[var(--neutral-200)] rounded-lg bg-white cursor-pointer hover:border-[var(--primary-500)] transition-colors flex items-center justify-between"
-                                    onClick={() => document.getElementById('end-date-input')?.showPicker?.()}
+                                    onClick={() => (document.getElementById('end-date-input') as HTMLInputElement)?.showPicker?.()}
                                 >
                                     <span className={customEndDate ? "text-[var(--neutral-900)]" : "text-[var(--neutral-400)]"}>
                                         {customEndDate ? formatDateDisplay(customEndDate) : "dd/MM/yyyy"}
