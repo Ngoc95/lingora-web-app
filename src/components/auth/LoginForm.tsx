@@ -38,7 +38,8 @@ export function LoginForm() {
         return;
       }
 
-      const isAdmin = user.roles.some((role: any) => role.name === "ADMIN");
+      const { activeRole } = useAuth.getState();
+      const isAdmin = activeRole === "ADMIN"; 
 
       if (isAdmin) {
         toast.success("Đăng nhập thành công! Chào mừng trở lại, Admin.");
@@ -76,7 +77,8 @@ export function LoginForm() {
         return;
       }
 
-      const isAdmin = user.roles.some((role: any) => role.name === "ADMIN");
+      const { activeRole } = useAuth.getState();
+      const isAdmin = activeRole === "ADMIN";
 
       if (isAdmin) {
         toast.success("Đăng nhập Google thành công! Chào mừng trở lại, Admin.");

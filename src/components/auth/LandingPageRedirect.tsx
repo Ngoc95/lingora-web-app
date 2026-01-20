@@ -7,18 +7,17 @@ import { UserRole } from "@/types/auth";
 
 export function LandingPageRedirect() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, activeRole } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const isAdmin = user.roles.some((role) => role.name === UserRole.ADMIN);
-      if (isAdmin) {
+      if (activeRole === UserRole.ADMIN) {
         router.push("/admin/dashboard");
       } else {
         router.push("/vocabulary");
       }
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, activeRole]);
 
   return null;
 }
