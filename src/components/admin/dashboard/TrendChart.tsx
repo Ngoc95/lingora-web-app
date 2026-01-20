@@ -56,6 +56,13 @@ export function TrendChart({
                         borderRadius: "8px",
                         fontSize: "12px",
                     }}
+                    formatter={(value: any, name?: string) => {
+                        // Format numbers with thousand separators
+                        if (typeof value === 'number') {
+                            return [value.toLocaleString("vi-VN"), name || ''];
+                        }
+                        return [value, name || ''];
+                    }}
                 />
                 <Legend wrapperStyle={{ fontSize: "12px" }} />
                 {dataKeys.map((dataKey) => (

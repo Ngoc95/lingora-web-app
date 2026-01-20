@@ -96,7 +96,10 @@ export function ActivityFeed({ activities, isLoading }: ActivityFeedProps) {
                         </p>
                         {activity.details?.amount && (
                             <p className="text-xs text-[var(--primary-600)] font-semibold mt-1">
-                                {activity.details.amount.toLocaleString("vi-VN")} VNĐ
+                                {(typeof activity.details.amount === 'string'
+                                    ? parseFloat(activity.details.amount)
+                                    : activity.details.amount
+                                ).toLocaleString("vi-VN")} VNĐ
                             </p>
                         )}
                     </div>

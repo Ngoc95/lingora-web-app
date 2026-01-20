@@ -45,6 +45,15 @@ const formatPercentage = (value: string | number | undefined | null): number => 
   return isNaN(num) ? 0 : Math.round(num);
 };
 
+const formatMonthYear = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr);
+    return format(date, "MM/yyyy");
+  } catch {
+    return dateStr;
+  }
+};
+
 export default function AdminDashboardPage() {
   const [filter, setFilter] = useState<DateRangeFilterType>(() => {
     // Default to 30 days
@@ -143,6 +152,11 @@ export default function AdminDashboardPage() {
   const examTrendData = examAnalytics?.trend.map(item => ({
     ...item,
     date: formatChartDate(item.date)
+  })) || [];
+
+  const revenueTrendData = revenueAnalytics?.trend.map(item => ({
+    ...item,
+    month: formatMonthYear(item.month)
   })) || [];
 
   return (
@@ -387,7 +401,7 @@ export default function AdminDashboardPage() {
             Phân tích doanh thu
           </h2>
           <TrendChart
-            data={revenueAnalytics?.trend || []}
+            data={revenueTrendData}
             dataKeys={[
               { key: "revenue", name: "Doanh thu (VNĐ)", color: "#10B981" },
             ]}
