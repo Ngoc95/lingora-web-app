@@ -48,7 +48,17 @@ export function TrendChart({
                     stroke="var(--neutral-600)"
                     style={{ fontSize: "12px" }}
                 />
-                <YAxis stroke="var(--neutral-600)" style={{ fontSize: "12px" }} />
+                <YAxis
+                    stroke="var(--neutral-600)"
+                    style={{ fontSize: "12px" }}
+                    tickFormatter={(value) => {
+                        // Format Y-axis values with thousand separators
+                        if (typeof value === 'number') {
+                            return value.toLocaleString("vi-VN");
+                        }
+                        return value;
+                    }}
+                />
                 <Tooltip
                     contentStyle={{
                         backgroundColor: "white",
