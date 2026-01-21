@@ -8,13 +8,14 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/types/auth";
 import { Logo } from "../shared/Logo";
 
 export function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const viewParam = searchParams.get("view");
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, activeRole } = useAuth();
   
   // Default to Register if no param (user clicked "Get Started"), 
   // or Login if view=login (user clicked "Login" or Logged out)
@@ -30,10 +31,11 @@ export function AuthPageContent() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const isAdmin = user.roles.some((role: any) => role.name === "ADMIN");
-      router.push(isAdmin ? "/admin/dashboard" : "/vocabulary");
+      const roleToUse = activeRole ?? user.roles[0]?.name ?? null;
+      if (!roleToUse) return;
+      router.push(roleToUse === UserRole.ADMIN ? "/admin/dashboard" : "/vocabulary");
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, activeRole, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--neutral-50)] to-[var(--neutral-100)] flex items-center justify-center p-4 overflow-hidden">
