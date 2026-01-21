@@ -80,8 +80,14 @@ export function RegisterForm() {
         toast.success("Đăng nhập Google thành công! Chào mừng trở lại, Admin.");
         router.push("/admin/dashboard");
       } else {
-        toast.success("Đăng nhập Google thành công! Chào mừng bạn.");
-        router.push("/vocabulary");
+        // Check if user needs to complete proficiency test
+        if (!user.proficiency) {
+          toast.success("Đăng nhập Google thành công! Hãy hoàn thành bài kiểm tra trình độ.");
+          router.push("/adaptive-test");
+        } else {
+          toast.success("Đăng nhập Google thành công! Chào mừng bạn.");
+          router.push("/vocabulary");
+        }
       }
     } catch (err: any) {
       console.error("Google login error:", err);
