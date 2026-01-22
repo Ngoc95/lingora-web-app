@@ -201,8 +201,8 @@ export default function StudySetDetailPage() {
         setReplyToCommentId(null);
         revalidate(); // Update comment count
         toast.success("Đã thêm bình luận");
-    } catch (err) {
-        toast.error("Không thể thêm bình luận");
+    } catch (err : any) {
+        toast.error(err.message || "Không thể thêm bình luận");
     } finally {
         setSubmittingComment(false);
     }
@@ -615,8 +615,8 @@ export default function StudySetDetailPage() {
                                      setReplyToCommentId(null);
                                      revalidate();
                                      toast.success("Đã thêm phản hồi");
-                                 } catch (err) {
-                                     toast.error("Không thể thêm phản hồi");
+                                 } catch (err : any) {
+                                     toast.error(err.message || "Không thể thêm phản hồi");
                                  } finally {
                                      setSubmittingComment(false);
                                  }
