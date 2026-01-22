@@ -77,6 +77,13 @@ export const studySetService = {
     return api.post<ApiResponse<BuyStudySetResponse>>(`/studysets/${id}/buy`);
   },
 
+  /**
+   * Add flashcard to a study set
+   */
+  addFlashcard: async (id: number, data: { frontText: string; backText: string; example?: string; audioUrl?: string; imageUrl?: string }) => {
+    return api.post<ApiResponse<any>>(`/studysets/${id}/flashcards`, data);
+  },
+
   // ============================================================
   // Social Interactions (Likes & Comments)
   // ============================================================

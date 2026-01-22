@@ -1,8 +1,10 @@
 "use client";
 
-import { Volume2 } from "lucide-react";
+import { Volume2, BookmarkPlus } from "lucide-react";
 import type { Word } from "@/types/vocabulary";
 import { useState, useRef } from "react";
+import { AddToStudySetDialog } from "./AddToStudySetDialog";
+import { Button } from "@/components/ui/button";
 
 interface WordResultCardProps {
     word: Word;
@@ -10,6 +12,7 @@ interface WordResultCardProps {
 
 export function WordResultCard({ word }: WordResultCardProps) {
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isAddToStudySetOpen, setIsAddToStudySetOpen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const handlePlayAudio = () => {
@@ -43,7 +46,16 @@ export function WordResultCard({ word }: WordResultCardProps) {
 
     return (
         <div className="max-w-4xl mx-auto px-4 mt-6">
-            <div className="bg-white rounded-xl border border-neutral-100 shadow-sm p-6">
+            <div className="relative bg-white rounded-xl border border-neutral-100 shadow-sm p-6">
+                <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-4 right-4 w-12 h-12 text-neutral-600 hover:text-primary hover:bg-primary/10"
+                                onClick={() => setIsAddToStudySetOpen(true)}
+                                title="Lưu vào Flashcard"
+                            >
+                                <BookmarkPlus className="size-8" strokeWidth={2.5} />
+                            </Button>
                 {/* Word Header */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -134,6 +146,12 @@ export function WordResultCard({ word }: WordResultCardProps) {
                         </div>
                     )}
                 </div>
+
+                <AddToStudySetDialog 
+                    word={word} 
+                    isOpen={isAddToStudySetOpen} 
+                    onOpenChange={setIsAddToStudySetOpen} 
+                />
             </div>
         </div>
     );
