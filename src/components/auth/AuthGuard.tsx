@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { UserStatus } from "@/types/auth";
@@ -9,10 +9,26 @@ export function AuthGuard() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Only check if finished loading and authenticated
-    if (!isLoading && isAuthenticated && user) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Only check after hydration
+    if (!isMounted) return;
+
+    // Check authentication
+    if (!isLoading) {
+      if (!isAuthenticated || !user) {
+        // Prevent redirect loop if already on auth pages (though AuthGuard shouldn't be there)
+        if (!pathname.startsWith("/get-started") && !pathname.startsWith("/otp")) {
+           router.replace("/get-started?view=login");
+        }
+        return;
+      }
+
       // If user is inactive, they should only be on auth pages or OTP page.
       // Since this guard is used in (user) layout (protected routes),
       // we must redirect inactive users to OTP.
@@ -30,7 +46,7 @@ export function AuthGuard() {
           router.replace("/adaptive-test");
       }
     }
-  }, [user, isAuthenticated, isLoading, router, pathname]);
+  }, [user, isAuthenticated, isLoading, router, pathname, isMounted]);
 
   return null; // This component doesn't render anything
 }

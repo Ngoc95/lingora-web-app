@@ -24,9 +24,13 @@ export function proxy(request: NextRequest) {
   }
 
   // 2. Redirect if unauthenticated user tries to access private pages
+  // Note: Disabled because HttpOnly cookies from a different backend domain are not visible to Next.js Middleware.
+  // We rely on Client-Side AuthGuard for protection.
+  /*
   if (!refreshToken && PRIVATE_PAGES_PREFIX.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.redirect(new URL("/get-started", request.url));
   }
+  */
 
   // Allow access
   return NextResponse.next();

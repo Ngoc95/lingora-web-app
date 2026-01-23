@@ -216,7 +216,7 @@ export default function PostDetailPage() {
 
             toast.success("Đã thêm bình luận");
         } catch (err: any) {
-            toast.error("Không thể thêm bình luận");
+            toast.error(err.message || "Không thể thêm bình luận:");
         } finally {
             setSubmitting(false);
         }
@@ -279,8 +279,8 @@ export default function PostDetailPage() {
 
             setEditDialogOpen(false);
             toast.success("Đã cập nhật bài viết");
-        } catch (error) {
-            toast.error("Không thể cập nhật bài viết");
+        } catch (error : any) {
+            toast.error(error.message || "Không thể cập nhật bài viết");
         }
     };
 
@@ -613,7 +613,7 @@ export default function PostDetailPage() {
                                             }
                                             toast.success("Đã thêm phản hồi");
                                         } catch (err: any) {
-                                            toast.error("Không thể thêm phản hồi");
+                                            toast.error(err.message ||"Không thể thêm phản hồi");
                                         } finally {
                                             setSubmitting(false);
                                         }
